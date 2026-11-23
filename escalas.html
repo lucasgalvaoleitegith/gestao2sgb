@@ -916,6 +916,13 @@
 
       filaSyncPromise = filaSyncPromise.then(async () => {
         try {
+          const snapshotLocal = {
+            afastamentos: [...(appState.afastamentos || [])],
+            fechamentoMes: [...(appState.fechamentoMes || [])],
+            mudancasProntidao: [...(appState.mudancasProntidao || [])],
+            ordemEfetivo: [...(appState.ordemEfetivo || [])]
+          };
+
           try {
             const rGet = await fetch(API_URL + '?t=' + Date.now());
             const jGet = await rGet.json();
@@ -923,8 +930,16 @@
               ['ocorrencias','plantoes','patrimonio','frota','avisos','favoritos','agenda','calendarUrl'].forEach(ch => {
                 if (jGet.dados[ch] !== undefined) appState[ch] = jGet.dados[ch];
               });
+              if (!Array.isArray(appState.efetivo) || appState.efetivo.length === 0) {
+                appState.efetivo = jGet.dados.efetivo || [];
+              }
             }
           } catch (e) {}
+
+          appState.afastamentos = snapshotLocal.afastamentos;
+          appState.fechamentoMes = snapshotLocal.fechamentoMes;
+          appState.mudancasProntidao = snapshotLocal.mudancasProntidao;
+          appState.ordemEfetivo = snapshotLocal.ordemEfetivo;
 
           const resp = await fetch(API_URL, {
             method: 'POST',
@@ -932,7 +947,9 @@
             body: JSON.stringify({ dados: appState, usuario: "Escalas", estacao: "Geral" })
           });
           const resJson = await resp.json();
-          if (!resJson.sucesso) throw new Error(resJson.erro || "Falha ao gravar na planilha");
+          if (!resJson || !resJson.sucesso) {
+            throw new Error((resJson && resJson.erro) || "A planilha não confirmou a gravação.");
+          }
 
           ocorrenciasUnificadasCache = extrairTodasOcorrenciasDoPlantao();
           atualizarStatusVisualSync('ok', 'Salvo na nuvem!');
@@ -940,11 +957,17 @@
         } catch (erro) {
           console.error("Falha ao sincronizar:", erro);
           atualizarStatusVisualSync('erro', 'Erro ao gravar na nuvem');
-          mostrarAlerta("Atenção: erro ao salvar na planilha (" + erro.message + "). Verifique se o Apps Script foi publicado como Nova Versão.");
+          mostrarAlerta("Atenção: não foi possível confirmar a gravação na planilha (" + erro.message + ").");
         } finally {
           syncEmAndamento = false;
+          const elRes = document.getElementById('resumo-sincronizacao');
+          if (elRes) {
+            const qtdPl = Array.isArray(appState.plantoes) ? appState.plantoes.length : 0;
+            elRes.textContent = `Efetivo: ${(appState.efetivo||[]).length} | Planejados: ${(appState.afastamentos||[]).length} | Plantões Salvos: ${qtdPl} | Ocorrências Lidas: ${ocorrenciasUnificadasCache.length}`;
+          }
         }
       });
+
       return filaSyncPromise;
     }
       
