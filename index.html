@@ -415,9 +415,9 @@
     let modoAgendaAtual = 'google'; // 'google' ou 'nativo'
 
     const favoritosPadrao = [
-      { id: 'fav_1', titulo: 'Plantão Operacional', href="plantao.html", categoria: 'Interno', icone: 'fa-truck-droplet' },
-      { id: 'fav_2', titulo: 'Administração 2º SGB', href="adm.html", categoria: 'Interno', icone: 'fa-building-shield' },
-      { id: 'fav_3', titulo: 'Escalas e SIPA', href="escalas.html", categoria: 'Interno', icone: 'fa-calendar-check' }
+      { id: 'fav_1', titulo: 'Plantão Operacional', url: 'plantao.html', categoria: 'Interno', icone: 'fa-truck-droplet' },
+      { id: 'fav_2', titulo: 'Administração 2º SGB', url: 'adm.html', categoria: 'Interno', icone: 'fa-building-shield' },
+      { id: 'fav_3', titulo: 'Escalas e SIPA', url: 'escalas.html', categoria: 'Interno', icone: 'fa-calendar-check' }
     ];
 
     function abrirConfirmacao(mensagem, callbackConfirmar) {
@@ -449,7 +449,7 @@
         document.getElementById('badge-nivel').textContent = `Perfil: ${nivel}`;
 			
 				// Oculta os cards de Administração e Escalas para o perfil 'operacional'
-const cardsModulo = document.querySelectorAll('section a[href*="index-html-adm"], section a[href*="escalas"]');
+const cardsModulo = document.querySelectorAll('section a[href*="adm.html"], section a[href*="escalas.html"]');
 cardsModulo.forEach(card => {
   card.style.display = (nivel === 'operacional') ? 'none' : 'flex';
 });
