@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plantão Diário - 2º SGB</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { pmesp: { blue: '#0B2265', darkblue: '#06133B', red: '#CC0000' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } }
+    }
+  </script>
+  <style>
+    .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+    
+    .a4-sheet {
+      width: 21cm;
+      min-height: 29.7cm;
+      margin: 0 auto;
+      background: white;
+      padding: 1.5cm;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
+      font-family: Arial, sans-serif;
+      color: black;
+    }
+    
+    .report-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px; text-align: center; }
+    .report-table th, .report-table td { border: 1px solid black; padding: 4px; }
+    .report-table th { font-weight: bold; background-color: #f8fafc; }
+    .text-left { text-align: left !important; }
+    
+    [contenteditable="true"]:hover { background-color: #fef08a; outline: 1px dashed #ca8a04; cursor: text; }
+    [contenteditable="true"]:focus { background-color: #fef9c3; outline: 2px solid #3b82f6; }
+
+    .func-btn-group input[type="checkbox"] { display: none; }
+    .func-btn-group label {
+      display: inline-block; padding: 3px 5px; font-size: 9px; font-weight: bold; border: 1px solid #cbd5e1;
+      border-radius: 4px; cursor: pointer; color: #64748b; background: white; user-select: none; transition: all 0.2s; margin-bottom: 2px;
+    }
+    .func-btn-group input[type="checkbox"]:checked + label { background-color: #0B2265; color: white; border-color: #0B2265; }
+
+    @media print {
+      body * { visibility: hidden; }
+      .print-area, .print-area * { visibility: visible; }
+      .print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; box-shadow: none; }
+      @page { size: A4; margin: 1cm; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 font-sans min-h-screen flex flex-col">
+
+  <!-- ================= TELA DE LOGIN ================= -->
+  <div id="tela-login" class="fixed inset-0 z-[200] bg-slate-100 flex items-center justify-center p-4 transition-opacity duration-300">
+    <div class="bg-white max-w-md w-full rounded-2xl shadow-2xl overflow-hidden border-t-4 border-pmesp-red">
+      <div class="bg-pmesp-blue p-8 text-center">
+        <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/20">
+          <i class="fa-solid fa-fire-extinguisher text-amber-400 text-3xl"></i>
+        </div>
+        <h1 class="text-2xl font-black text-white tracking-tight">SISTEMA 2º SGB</h1>
+        <p class="text-amber-400 text-sm font-bold mt-1">Acesso Restrito</p>
+      </div>
+
+      <div class="p-8">
+        <form id="form-login" onsubmit="fazerLogin(event)" class="space-y-6">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Usuário</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="fa-solid fa-user text-slate-400"></i>
+              </div>
+              <input type="text" id="login-usuario" required class="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-lg text-sm focus:border-pmesp-blue outline-none transition" placeholder="Digite seu usuário">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Senha</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="fa-solid fa-lock text-slate-400"></i>
+              </div>
+              <input type="password" id="login-senha" required class="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-lg text-sm focus:border-pmesp-blue outline-none transition" placeholder="••••••••">
+            </div>
+          </div>
+
+          <div id="msg-erro" class="hidden bg-red-50 text-red-600 text-xs font-bold p-3 rounded border border-red-200 text-center">
+            Usuário ou senha incorretos!
+          </div>
+
+          <button type="submit" class="w-full bg-pmesp-blue text-white font-bold py-3 rounded-lg shadow-lg hover:bg-pmesp-darkblue transition hover:scale-[1.02]">
+            Entrar no Sistema
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SISTEMA PRINCIPAL ================= -->
+  <div id="tela-sistema" class="hidden flex-col min-h-screen">
+    <!-- CABEÇALHO GLOBAL -->
+    <header class="bg-pmesp-blue text-white shadow-md border-b-4 border-pmesp-red sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center border border-white/20">
+            <i class="fa-solid fa-clipboard-list text-amber-400 text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-sm font-extrabold tracking-tight">SISTEMA OPERACIONAL 2º SGB</h1>
+            <span class="text-xs text-amber-400">Escala Diária e Passagem de Serviço</span>
+          </div>
+        </div>
+        <div class="flex gap-2">
+           <div id="status-nuvem" class="text-white px-3 py-1.5 rounded text-xs font-bold flex items-center gap-2">
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Conectando...
+          </div>
+          <button onclick="fazerLogout()" class="bg-red-600/80 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-2">
+            <i class="fa-solid fa-right-from-bracket"></i> Sair
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTROLES E CONFIGURAÇÃO PRÉVIA -->
+    <div class="max-w-7xl mx-auto px-4 py-4 w-full flex-1">
+      
+      <!-- AVISO DE ANIVERSARIANTES -->
+      <div id="aviso-aniversario" class="hidden bg-blue-100 border border-blue-300 text-blue-800 p-3 rounded-xl mb-4 font-bold flex items-center gap-2 shadow-sm">
+        <i class="fa-solid fa-cake-candles text-xl text-blue-600"></i>
+        <span></span>
+      </div>
+
+      <!-- PASSO 1: DATA E ESTAÇÃO -->
+      <div class="bg-white rounded-xl shadow border border-slate-200 p-4 flex flex-col md:flex-row gap-4 justify-between items-end mb-4">
+        <div class="flex gap-4 flex-1 items-end">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Estação de Bombeiros</label>
+            <select id="plantao-estacao" class="border-2 border-slate-300 rounded p-2 text-sm font-bold bg-white text-pmesp-blue outline-none w-40">
+              <option value="Porto Feliz">Porto Feliz</option>
+              <option value="Salto">Salto</option>
+              <option value="Itu">Itu</option>
+              <option value="São Roque">São Roque</option>
+              <option value="Ibiúna">Ibiúna</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Data do Serviço</label>
+            <input type="date" id="plantao-data" class="border-2 border-slate-300 rounded p-2 text-sm font-bold bg-white text-pmesp-blue outline-none">
+          </div>
+          <div>
+            <button id="btn-carregar-cfg" onclick="window.iniciarDashboardDiario()" disabled class="bg-pmesp-blue text-white px-6 py-2.5 rounded text-sm font-bold hover:bg-pmesp-darkblue transition flex items-center gap-2 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+              Carregando Nuvem...
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PASSO 2: DASHBOARD OPERACIONAL -->
+      <div id="painel-configuracao" class="hidden flex-col gap-4 mb-10">
+        
+        <!-- HEADER DO DASHBOARD + BOTÕES -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end bg-white p-4 rounded-xl shadow border border-pmesp-blue gap-4">
+          <div>
+            <h3 class="font-black text-pmesp-blue text-lg"><i class="fa-solid fa-list-check"></i> Dashboard de Guarnição e Serviço</h3>
+            <p class="text-xs text-slate-500 font-bold mb-3" id="info-turno">Prontidão X - Equipe BCP Y</p>
+            <button onclick="window.abrirModalIncluirEfetivo()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 transition flex items-center gap-2 shadow-sm">
+              <i class="fa-solid fa-user-plus"></i> Lançar Efetivo Extra (Dejem/Adequação)
+            </button>
+          </div>
+          <button onclick="window.verificarEGerarDocumentos()" class="bg-green-600 text-white px-6 py-3 rounded-lg text-sm font-bold hover:bg-green-700 transition flex items-center gap-2 shadow-lg hover:scale-105">
+            <i class="fa-solid fa-file-signature"></i> 2. Preencher, Salvar Ocorrências e Gerar Documentos
+          </button>
+        </div>
+
+        <!-- BANNER DE AVISOS OPERACIONAIS -->
+        <div id="container-avisos-hoje" class="flex flex-col gap-2 mb-2 hidden"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          <!-- COLUNA ESQUERDA: Comando & Frota -->
+          <div class="lg:col-span-1 flex flex-col gap-4">
+            <div class="bg-white rounded-xl shadow border border-slate-200 p-4">
+              <h4 class="text-xs font-bold uppercase text-slate-800 border-b pb-2 mb-3"><i class="fa-solid fa-star"></i> Comando e Supervisão</h4>
+              <div class="grid grid-cols-2 gap-3">
+                <div><label class="text-[10px] font-bold uppercase text-slate-500">Sup. Serviço</label><input type="text" id="cfg-sup" class="w-full text-[11px] font-bold border rounded p-1.5" placeholder="Ex: CAP PM"></div>
+                <div><label class="text-[10px] font-bold uppercase text-slate-500">Oficial Área</label><input type="text" id="cfg-ofarea" class="w-full text-[11px] font-bold border rounded p-1.5" placeholder="Ex: 1° TEN PM"></div>
+                <div><label class="text-[10px] font-bold uppercase text-slate-500">COBOM Dia</label><input type="text" id="cfg-cobom-dia" class="w-full text-[11px] font-bold border rounded p-1.5"></div>
+                <div><label class="text-[10px] font-bold uppercase text-slate-500">COBOM Noite</label><input type="text" id="cfg-cobom-noite" class="w-full text-[11px] font-bold border rounded p-1.5"></div>
+              </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow border border-slate-200 p-4 flex-1">
+              <h4 class="text-xs font-bold uppercase text-slate-800 border-b pb-2 mb-3"><i class="fa-solid fa-truck-medical"></i> Viaturas do Posto</h4>
+              <div id="cfg-lista-frota" class="space-y-2"></div>
+              <p class="text-[9px] text-slate-400 mt-3 leading-tight">*Apenas VTRs marcadas como Operando ou Revezamento aparecerão no embarque.</p>
+            </div>
+          </div>
+
+          <!-- COLUNA CENTRAL: Efetivo de Serviço -->
+          <div class="lg:col-span-3 bg-white rounded-xl shadow border border-slate-200 p-4 flex flex-col">
+            <h4 class="text-xs font-bold uppercase text-slate-800 border-b pb-2 mb-3"><i class="fa-solid fa-people-group"></i> Efetivo Escalado (Composição)</h4>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left whitespace-nowrap text-xs">
+                <thead class="bg-slate-50 text-slate-600">
+                  <tr>
+                    <th class="p-2 border font-bold w-[120px]">Grad/Nome</th>
+                    <th class="p-2 border font-bold w-[100px]">Embarque</th>
+                    <th class="p-2 border font-bold text-center">Atribuição de Funções</th>
+                    <th class="p-2 border font-bold text-center min-w-[120px]" colspan="2">Afastamento / Alteração</th>
+                  </tr>
+                </thead>
+                <tbody id="cfg-lista-militares" class="divide-y divide-slate-100"></tbody>
+                <tbody id="cfg-lista-bcp-dia" class="divide-y divide-slate-100"></tbody>
+                <tbody id="cfg-lista-bcp-noite" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ESCALA DE HORAS -->
+        <div class="bg-white rounded-xl shadow border border-slate-200 p-4">
+          <div class="flex justify-between items-center border-b pb-2 mb-4">
+            <h4 class="text-xs font-bold uppercase text-slate-800"><i class="fa-solid fa-clock"></i> Escala de Horas (Telegrafia / Faxina / Ronda)</h4>
+            <button onclick="window.adicionarQuartoHora()" class="bg-slate-800 text-white px-3 py-1 rounded text-xs font-bold hover:bg-slate-900 transition"><i class="fa-solid fa-plus"></i> Novo Quarto</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left whitespace-nowrap text-xs">
+              <thead class="bg-slate-50 text-slate-600">
+                <tr>
+                  <th class="p-2 border font-bold w-[20%]">Período (Início às Fim)</th>
+                  <th class="p-2 border font-bold w-[40%]">Nome / Graduação</th>
+                  <th class="p-2 border font-bold w-[35%]">Observações (Posto/Função)</th>
+                  <th class="p-2 border font-bold text-center w-[5%]"><i class="fa-solid fa-trash"></i></th>
+                </tr>
+              </thead>
+              <tbody id="cfg-escala-horas" class="divide-y divide-slate-100">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EFETIVO EXTRA -->
+  <div id="modal-efetivo-extra" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 hidden">
+    <div class="bg-white w-full max-w-xl rounded-xl shadow-2xl m-4 flex flex-col max-h-[90vh]">
+      <div class="bg-indigo-600 text-white p-4 flex justify-between items-center rounded-t-xl">
+        <h3 class="font-bold"><i class="fa-solid fa-user-plus"></i> Incluir Efetivo (Dejem/Adequação)</h3>
+        <button onclick="fecharModalExtra()" class="text-white hover:text-indigo-200 text-xl leading-none">&times;</button>
+      </div>
+      <div class="p-5 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+        
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nome do Integrante (Selecione ou Digite)</label>
+          <div class="flex flex-col gap-2">
+            <select id="extra-nome-select" class="w-full border rounded p-2 text-sm font-bold bg-slate-50" onchange="if(this.value){document.getElementById('extra-nome-livre').value='';}">
+              <option value="">-- Selecionar da Nuvem --</option>
+            </select>
+            <span class="text-center text-[10px] font-bold text-slate-400">OU</span>
+            <input type="text" id="extra-nome-livre" class="w-full border rounded p-2 text-sm font-bold" placeholder="Digite o Grad/Nome (ex: SD PM SILVA)" oninput="if(this.value){document.getElementById('extra-nome-select').value='';}">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Motivo da Inclusão</label>
+            <select id="extra-motivo" class="w-full border rounded p-2 text-sm font-bold text-indigo-700">
+              <option value="DEJEM">DEJEM</option>
+              <option value="ADEQUAÇÃO">Adequação</option>
+              <option value="REFORÇO">Reforço Operacional</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Função Primária</label>
+            <select id="extra-funcao" class="w-full border rounded p-2 text-sm">
+               <option value="">Nenhuma / Auxiliar</option>
+               <option value="CMT PRONT">Comandante Prontidão</option>
+               <option value="CMT GU">Comandante GU</option>
+               <option value="CB DIA">Cb de Dia</option>
+               <option value="MOT">Motorista</option>
+               <option value="TEL">Telegrafista</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Horário de Início</label>
+            <input type="time" id="extra-hora-inicio" class="w-full border rounded p-2 text-sm font-bold">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Horário de Término</label>
+            <input type="time" id="extra-hora-fim" class="w-full border rounded p-2 text-sm font-bold">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Observações (Opcional)</label>
+          <input type="text" id="extra-obs" class="w-full border rounded p-2 text-sm" placeholder="Ex: Cobre o período da manhã...">
+        </div>
+
+      </div>
+      <div class="p-4 border-t bg-slate-50 rounded-b-xl flex justify-end gap-2 mt-auto">
+        <button onclick="fecharModalExtra()" class="px-4 py-2 border rounded text-slate-600 font-bold hover:bg-slate-100 text-sm">Cancelar</button>
+        <button onclick="salvarEfetivoExtra()" class="px-6 py-2 bg-indigo-600 text-white rounded font-bold hover:bg-indigo-700 text-sm shadow-md">Adicionar à Escala</button>
+      </div>
+    </div>
+  </div>
+    
+  <!-- MODAL: AVISO DE RELATÓRIO SALVO NA NUVEM -->
+  <div id="modal-substituir" class="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/80 hidden">
+    <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full m-4 text-center border-t-4 border-pmesp-blue">
+      <i class="fa-solid fa-cloud-arrow-down text-4xl text-pmesp-blue mb-4"></i>
+      <h3 class="font-bold text-lg text-slate-800 mb-2">Relatório Salvo Encontrado</h3>
+      <p class="text-sm text-slate-500 mb-6">Foi encontrado um documento salvo na Nuvem para esta data e estação. Deseja carregar o preenchimento salvo ou gerar um novo atualizando as ocorrências?</p>
+      <div class="flex flex-col gap-2">
+        <button onclick="window.carregarRelatorioSalvo()" class="bg-pmesp-blue text-white px-4 py-3 rounded font-bold hover:bg-pmesp-darkblue transition">Carregar Documento Salvo (Continuar)</button>
+        <button onclick="window.processarGeracaoNova()" class="border-2 border-slate-200 text-slate-500 px-4 py-3 rounded font-bold hover:bg-slate-50 hover:text-red-500 transition">Gerar Novo e Atualizar Ocorrências (Sobrescrever)</button>
+        <button onclick="document.getElementById('modal-substituir').classList.add('hidden')" class="text-slate-400 font-bold hover:text-slate-600 mt-2">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL POP-UP (TELA CHEIA): VISUALIZADOR DE DOCUMENTOS A4 -->
+  <div id="modal-relatorios" class="fixed inset-0 z-[110] bg-slate-900/95 hidden flex-col w-screen h-screen transition-opacity">
+    <div class="h-16 shrink-0 bg-slate-800 px-4 md:px-6 flex justify-between items-center shadow-lg border-b border-slate-700 z-50">
+      <div class="flex gap-2">
+        <button onclick="window.alternarRelatorio('escala')" id="btn-aba-escala" class="px-3 md:px-5 py-2 rounded-lg font-bold text-xs md:text-sm bg-pmesp-blue text-white shadow transition">
+          <i class="fa-solid fa-file-lines mr-1 md:mr-2"></i> Escala
+        </button>
+        <button onclick="window.alternarRelatorio('passagem')" id="btn-aba-passagem" class="px-3 md:px-5 py-2 rounded-lg font-bold text-xs md:text-sm bg-slate-700 text-slate-300 hover:bg-slate-600 transition">
+          <i class="fa-solid fa-list-check mr-1 md:mr-2"></i> Passagem
+        </button>
+        <button onclick="window.alternarRelatorio('hora')" id="btn-aba-hora" class="px-3 md:px-5 py-2 rounded-lg font-bold text-xs md:text-sm bg-slate-700 text-slate-300 hover:bg-slate-600 transition">
+          <i class="fa-solid fa-clock mr-1 md:mr-2"></i> Horas
+        </button>
+      </div>
+      <div class="flex items-center gap-2 md:gap-4">
+        <button id="btn-salvar-nuvem" onclick="window.salvarRelatorioNaNuvem()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 md:px-5 rounded-lg shadow flex items-center gap-2 transition text-xs md:text-sm">
+          <i class="fa-solid fa-cloud-arrow-up"></i> <span class="hidden md:inline">Salvar na Nuvem</span>
+        </button>
+        <button onclick="window.imprimirRelatorioAtivo()" class="bg-pmesp-blue hover:bg-pmesp-darkblue text-white font-bold py-2 px-3 md:px-4 rounded-lg shadow flex items-center gap-2 transition text-xs md:text-sm">
+          <i class="fa-solid fa-print"></i> <span class="hidden md:inline">Imprimir</span>
+        </button>
+        <button onclick="document.getElementById('modal-relatorios').classList.add('hidden')" class="text-slate-400 hover:text-white font-bold text-xs md:text-sm transition flex items-center gap-2 ml-2">
+          <i class="fa-solid fa-xmark text-lg"></i> <span class="hidden md:inline">Fechar</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Área de rolagem para o A4 -->
+    <div class="h-[calc(100vh-4rem)] w-full overflow-y-auto overflow-x-hidden p-4 md:p-8 pb-32 flex justify-center custom-scrollbar">
+
+      <!-- DOCUMENTO 1: ESCALA DE SERVIÇO -->
+      <div id="doc-escala" class="w-full max-w-[21cm]">
+        <div id="folha-escala" class="a4-sheet">
+          <div class="text-center font-bold uppercase mb-4" style="font-size: 13px; line-height: 1.4;">
+            SECRETARIA DA SEGURANÇA PÚBLICA<br>
+            POLÍCIA MILITAR DO ESTADO DE SÃO PAULO<br>
+            CORPO DE BOMBEIROS<br>
+            COMANDO DE BOMBEIROS DO INTERIOR 1<br>
+            15º GRUPAMENTO DE BOMBEIROS<br>
+            2º SGB<br>
+            ESCALA DE SERVIÇO <span id="out-escala-data" contenteditable="true" class="px-1 text-pmesp-blue">[DATA]</span>
+          </div>
+
+          <table class="report-table">
+            <tr>
+              <td contenteditable="true" style="width: 33%;">2º SGB</td>
+              <td contenteditable="true" style="width: 33%;" id="out-escala-estacao">E. B. PORTO FELIZ</td>
+              <td contenteditable="true" style="width: 34%;" id="out-escala-prontidao">PRONTIDÃO</td>
+            </tr>
+            <tr>
+              <td contenteditable="true" colspan="2" class="text-left"><strong>Sup. de Serviço:</strong> <span id="out-esc-sup"></span></td>
+              <td contenteditable="true" class="text-left"><strong>Oficial de Área:</strong> <span id="out-esc-ofarea"></span></td>
+            </tr>
+            <tr>
+              <td contenteditable="true" colspan="2" class="text-left"><strong>COBOM/ DIA:</strong> <span id="out-esc-cobomdia"></span></td>
+              <td contenteditable="true" class="text-left"><strong>COBOM/ NOITE:</strong> <span id="out-esc-cobomnoite"></span></td>
+            </tr>
+            <tr>
+              <td contenteditable="true" colspan="2" class="text-left"><strong>Cmt da Pront:</strong> <span id="out-esc-cmtpront"></span></td>
+              <td contenteditable="true" class="text-left"><strong>Cb de Dia:</strong> <span id="out-esc-cbdia"></span></td>
+            </tr>
+            <tr>
+              <td contenteditable="true" colspan="2" class="text-left"><strong>Chefe Motoristas:</strong> <span id="out-esc-chefemot"></span></td>
+              <td contenteditable="true" class="text-left"><strong>Telegrafia:</strong> <span id="out-esc-tel"></span></td>
+            </tr>
+            <tr>
+              <td contenteditable="true" colspan="2" class="text-left"><strong>Equipe BCP DIA:</strong> <span id="out-bcp-dia"></span></td>
+              <td contenteditable="true" class="text-left"><strong>Equipe BCP NOITE:</strong> <span id="out-bcp-noite"></span></td>
+            </tr>
+          </table>
+
+          <table class="report-table">
+            <tr>
+              <th style="width:25%">VTR</th>
+              <th style="width:25%">FUNÇÃO / NOME GUERRA</th>
+              <th style="width:25%">VTR</th>
+              <th style="width:25%">FUNÇÃO / NOME GUERRA</th>
+            </tr>
+            <tbody id="out-esc-guarnicoes">
+              <!-- Injetado via JS -->
+            </tbody>
+            <tr>
+              <td contenteditable="true" id="out-esc-reserva1"></td>
+              <td contenteditable="true" class="text-left">RESERVA</td>
+              <td contenteditable="true" id="out-esc-reserva2"></td>
+              <td contenteditable="true" class="text-left">RESERVA</td>
+            </tr>
+          </table>
+
+          <table class="report-table">
+            <tr><th colspan="2">NOVIDADES (AFASTAMENTOS / FÉRIAS / TROCAS)</th></tr>
+            <tr>
+              <th style="width: 50%;">GRADUAÇÃO / NOME GUERRA</th>
+              <th style="width: 50%;">NOVIDADES</th>
+            </tr>
+            <tr>
+              <td contenteditable="true" class="h-[40px] align-top" id="out-escala-nomes-ausentes"></td>
+              <td contenteditable="true" class="h-[40px] align-top" id="out-escala-motivo-ausentes"></td>
+            </tr>
+          </table>
+
+          <table class="report-table">
+            <tr>
+              <th style="width: 25%;">NOME DE GUERRA</th>
+              <th style="width: 25%;">TELEGRAFISTA / HORÁRIO</th>
+              <th style="width: 50%;">FAXINA / OBS</th>
+            </tr>
+            <tbody id="out-esc-tabela-horas-resumo">
+            </tbody>
+          </table>
+
+          <div style="margin-top: 40px; display: flex; justify-content: space-around; text-align: center; font-size: 11px;">
+            <div contenteditable="true">
+              <span id="out-esc-ass-cbdia" class="uppercase"></span>
+              <br><strong>CB PM DE DIA</strong>
+            </div>
+            <div contenteditable="true">
+              <span id="out-esc-ass-cmtpront" class="uppercase"></span>
+              <br><strong>CMT DE PRONTIDÃO</strong>
+            </div>
+          </div>
+          <div style="margin-top: 50px; text-align: center; font-size: 11px;" contenteditable="true">
+            JEAN WILLIAN DE MORAES <strong>FONSECA</strong><br>
+            <strong>1° TEN PM CMT DA EB</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- DOCUMENTO 2: PASSAGEM DE SERVIÇO -->
+      <div id="doc-passagem" class="hidden w-[21cm] shrink-0">
+        <div id="folha-passagem" class="a4-sheet">
+          <div class="text-center font-bold uppercase mb-4" style="font-size: 12px; line-height: 1.4;">
+            POLÍCIA MILITAR DO ESTADO DE SÃO PAULO<br>
+            CORPO DE BOMBEIROS<br>
+            15º GRUPAMENTO DE BOMBEIROS<br>
+            PELOTÃO DE BOMBEIROS DE <span id="out-pass-pelotao"></span><br>
+            FORMULÁRIO DE PASSAGEM DE SERVIÇO
+          </div>
+
+          <table class="report-table">
+            <tr>
+              <td contenteditable="true" colspan="2" class="text-left font-bold">2º SGB</td>
+              <td contenteditable="true" colspan="4" class="text-left font-bold" id="out-pass-pel">PELOTÃO:</td>
+            </tr>
+            <tr>
+              <td contenteditable="true" colspan="3" class="text-left"><strong>SERVIÇO DE:</strong> <span id="out-pass-data-ini"></span></td>
+              <td contenteditable="true" colspan="3" class="text-left"><strong>PARA:</strong> <span id="out-pass-data-fim"></span></td>
+            </tr>
+            <tr>
+              <td contenteditable="true" colspan="3" class="text-left"><strong>PRONTIDÃO:</strong> <span id="out-pass-pront"></span></td>
+              <td contenteditable="true" colspan="3" class="text-left"><strong>CMT PRONTIDÃO:</strong> <span id="out-pass-cmt-pront"></span></td>
+            </tr>
+            <tr><th colspan="6" class="text-left bg-slate-100">1. NOVIDADES DE PESSOAL:</th></tr>
+            <tr>
+              <td contenteditable="true">FALTA</td><td contenteditable="true">BAIXAS</td><td contenteditable="true">VISITANTE</td>
+              <td contenteditable="true">LICENÇA</td><td contenteditable="true">RESTRIÇÃO</td><td contenteditable="true">ESTAGIÁRIOS</td>
+            </tr>
+            <tr><td colspan="6" contenteditable="true" class="text-left h-[40px] align-top">COMPLEMENTO: <span id="out-pass-nov-pessoal"></span></td></tr>
+            
+            <tr><th colspan="6" class="text-left bg-slate-100">2. MATERIAL BÉLICO:</th></tr>
+            <tr>
+              <th colspan="2" style="font-size: 9px;">2.1. ARMAMENTO (TIPO, MODELO, MARCA, SÉRIE):</th>
+              <th colspan="2" style="font-size: 9px;">2.2. COLETE BALÍSTICO (TAM, QTDE, CAPA, SÉRIE):</th>
+              <th colspan="2" style="font-size: 9px;">2.3. MUNIÇÃO (TIPO, QTDE):</th>
+            </tr>
+            <tr><td colspan="2" contenteditable="true" class="h-6"></td><td colspan="2" contenteditable="true"></td><td colspan="2" contenteditable="true"></td></tr>
+            <tr><td colspan="2" contenteditable="true" class="h-6"></td><td colspan="2" contenteditable="true"></td><td colspan="2" contenteditable="true"></td></tr>
+            <tr><td colspan="6" contenteditable="true" class="text-left h-[30px] align-top">OUTROS MATERIAIS BÉLICOS (ESPECIFICAR):</td></tr>
+
+            <tr><th colspan="6" class="text-left bg-slate-100">3. NOVIDADES DE MATERIAL/EQUIPAMENTOS:</th></tr>
+            <tr><td colspan="6" contenteditable="true" class="h-[40px] text-left align-top"></td></tr>
+
+            <tr><th colspan="6" class="text-left bg-slate-100">4. SITUAÇÃO DE VIATURAS:</th></tr>
+            <tr><td colspan="2" class="text-left font-bold w-[20%]">OPERANDO/REV.:</td><td colspan="4" contenteditable="true" class="text-left" id="out-pass-vtr-op"></td></tr>
+            <tr><td colspan="2" class="text-left font-bold w-[20%]">BAIXADA:</td><td colspan="4" contenteditable="true" class="text-left" id="out-pass-vtr-bx"></td></tr>
+            <tr><td colspan="2" class="text-left font-bold w-[20%]">RESERVA:</td><td colspan="4" contenteditable="true" class="text-left" id="out-pass-vtr-res"></td></tr>
+            <tr><td colspan="2" class="text-left font-bold w-[20%]">ACIDENTADA:</td><td colspan="4" contenteditable="true" class="text-left"></td></tr>
+
+            <tr><th colspan="6" class="text-left bg-slate-100">5. ORDEM DO DIA:</th></tr>
+            <tr><td colspan="6" contenteditable="true" class="h-[30px] text-left align-top"></td></tr>
+
+            <tr><th colspan="6" class="text-left bg-slate-100">6. ORDENS RECEBIDAS:</th></tr>
+            <tr><td colspan="6" contenteditable="true" class="text-left align-top"><strong>6.1. VERBAIS:</strong><br><br></td></tr>
+            <tr><td colspan="6" contenteditable="true" class="text-left align-top" id="out-pass-ordens-escritas"><strong>6.2. ESCRITAS:</strong><br><br></td></tr>
+
+            <tr><th colspan="6" class="text-left bg-slate-100">7. ARMAR GERAL:</th></tr>
+            <tr><td colspan="6" contenteditable="true" class="text-left align-top leading-relaxed">
+              <strong>TREINAMENTO EXECUTADO:</strong><br>
+              <strong>POP E NORMAS UTILIZADOS:</strong><br>
+              <strong>INSTRUTOR RESPONSÁVEL:</strong><br>
+              <strong>PARTICIPANTES:</strong><br>
+              <strong>MATERIAIS E EQUIPAMENTO UTILIZADOS:</strong><br>
+            </td></tr>
+            
+            <tr><th colspan="6" class="text-left bg-slate-100">8. INSTRUÇÃO / EDUCAÇÃO FÍSICA:</th></tr>
+            <tr><td colspan="6" contenteditable="true" class="text-left align-top h-[30px]"></td></tr>
+            
+            <tr><th colspan="6" class="text-left bg-slate-100">9. MANUTENÇÃO DO QUARTEL E OCORRÊNCIAS DE VULTO:</th></tr>
+            <tr><td colspan="6" contenteditable="true" class="text-left align-top h-[40px]"></td></tr>
+          </table>
+          
+          <table class="report-table" style="margin-bottom: 30px;">
+            <tr><th colspan="4" class="text-left bg-slate-100">10. RONDAS EFETUADAS:</th></tr>
+            <tr>
+              <th style="width: 25%;">FUNÇÃO</th>
+              <th style="width: 25%;">DATA-HORA</th>
+              <th style="width: 50%;" colspan="2">NOVIDADES ENCONTRADAS E SUGESTÕES</th>
+            </tr>
+            <tr><td contenteditable="true" class="h-6"></td><td contenteditable="true"></td><td contenteditable="true" colspan="2"></td></tr>
+            <tr><td contenteditable="true" class="h-6"></td><td contenteditable="true"></td><td contenteditable="true" colspan="2"></td></tr>
+          </table>
+
+          <div style="display: flex; justify-content: space-around; text-align: center; font-size: 10px;">
+            <div contenteditable="true">
+              <div style="width: 180px; border-top: 1px solid black; margin: 0 auto 5px;"></div>
+              <strong>CMT DA PRONTIDÃO - QUE SAI</strong><br>
+              RE: <br>ASSINATURA:
+            </div>
+            <div contenteditable="true">
+              <div style="width: 180px; border-top: 1px solid black; margin: 0 auto 5px;"></div>
+              <strong>CMT DA PRONTIDÃO - QUE ENTRA</strong><br>
+              RE: <br>ASSINATURA:
+            </div>
+            <div contenteditable="true">
+              <div style="width: 180px; border-top: 1px solid black; margin: 0 auto 5px;"></div>
+              <strong>CMT DO PB - CONFERÊNCIA</strong><br>
+              RE: <br>ASSINATURA:
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DOCUMENTO 3: ESCALA DE HORAS -->
+      <div id="doc-hora" class="hidden w-[21cm] shrink-0">
+        <div id="folha-hora" class="a4-sheet">
+          <div class="text-center font-bold uppercase mb-4" style="font-size: 13px; line-height: 1.4;">
+            POLÍCIA MILITAR DO ESTADO DE SÃO PAULO<br>
+            CORPO DE BOMBEIROS<br>
+            15º GRUPAMENTO DE BOMBEIROS<br>
+            <span id="out-hora-estacao">PELOTÃO DE BOMBEIROS</span><br>
+            ESCALA DE HORAS E TELEFONIA
+          </div>
+
+          <table class="report-table">
+            <tr>
+              <td contenteditable="true" class="text-left font-bold" style="width: 50%;">SERVIÇO DE: <span id="out-hora-data"></span></td>
+              <td contenteditable="true" class="text-left font-bold" style="width: 50%;">PRONTIDÃO: <span id="out-hora-pront"></span></td>
+            </tr>
+          </table>
+
+          <table class="report-table mt-4">
+            <tr>
+              <th style="width: 20%;">HORÁRIO</th>
+              <th style="width: 45%;">NOME / GRADUAÇÃO</th>
+              <th style="width: 35%;">OBSERVAÇÕES (POSTO/FUNÇÃO)</th>
+            </tr>
+            <tbody id="out-hora-linhas">
+              <!-- Linhas Injetadas via JS -->
+            </tbody>
+          </table>
+          
+          <div style="margin-top: 50px; text-align: center; font-size: 11px;">
+            <div contenteditable="true" style="display: inline-block; width: 60%;">
+              <div style="border-top: 1px solid black; margin-bottom: 5px;"></div>
+              <strong>COMANDANTE DA PRONTIDÃO / SARGENTO DE DIA</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // SISTEMA DE LOGIN E SESSÃO
+    // ==========================================
+    const usuarios = {
+      'gestor': { senha: 'Xdl33122@', nivel: 'gestor' },
+      'operacional': { senha: 'operacional', nivel: 'operacional' }
+    };
+
+    function verificarSessao() {
+      const nivel = localStorage.getItem('usuarioAtivo');
+      if (nivel === 'gestor' || nivel === 'operacional') {
+        document.getElementById('tela-login').classList.add('hidden');
+        document.getElementById('tela-sistema').classList.remove('hidden');
+        document.getElementById('tela-sistema').classList.add('flex');
+        
+        const hoje = new Date();
+        document.getElementById('plantao-data').value = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+        carregarDadosNuvem();
+      } else {
+        document.getElementById('tela-login').classList.remove('hidden');
+        document.getElementById('tela-sistema').classList.add('hidden');
+        document.getElementById('tela-sistema').classList.remove('flex');
+      }
+    }
+
+    function fazerLogin(event) {
+      event.preventDefault();
+      const user = document.getElementById('login-usuario').value.trim().toLowerCase();
+      const pass = document.getElementById('login-senha').value;
+      const msgErro = document.getElementById('msg-erro');
+
+      if (usuarios[user] && usuarios[user].senha === pass) {
+        localStorage.setItem('usuarioAtivo', usuarios[user].nivel);
+        msgErro.classList.add('hidden');
+        verificarSessao();
+      } else {
+        msgErro.classList.remove('hidden');
+        document.getElementById('login-senha').value = '';
+      }
+    }
+
+    function fazerLogout() {
+      localStorage.removeItem('usuarioAtivo');
+      document.getElementById('login-usuario').value = '';
+      document.getElementById('login-senha').value = '';
+      verificarSessao();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      verificarSessao();
+    });
+
+    // ==========================================
+    // CÓDIGO PRINCIPAL DO SISTEMA DE PLANTÃO
+    // ==========================================
+    const API_URL = "https://script.google.com/macros/s/AKfycbxyREqwxOntX2_rXCDMK6xyU-wYxlfk986zJjL6G2u_H39mOJN8EkRWomaqte37zQ2ydw/exec";
+    let appState = { efetivo: [], frota: [], afastamentos: [], ocorrencias: [], plantoes: [], avisos: [] };
+    
+    let gProntidao = '', gBcpDia = '', gBcpNoite = '';
+    let nomesDisponiveisHoras = []; 
+    let contadorHora = 0; 
+    let todosEstacao = []; 
+    let idPlantaoAtual = '';
+
+    const horariosIniciais = ["22:00 às 00:00", "00:00 às 02:00", "02:00 às 04:00", "04:00 às 06:00"];
+
+    // Garante sempre um identificador único válido para cada integrante (id -> re -> nomeGuerra)
+    function obterChaveUnica(ef) {
+      if (!ef) return '';
+      return String(ef.id || ef.re || ef.nomeGuerra || '').trim();
+    }
+
+    // Transforma a chave em ID seguro para atributos HTML (sem espaços ou pontos)
+    function obterDomId(chave) {
+      return String(chave || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+    }
+
+    async function carregarDadosNuvem() {
+      try {
+        const resposta = await fetch(API_URL + '?t=' + Date.now());
+        const resultado = await resposta.json();
+        if (resultado.sucesso && resultado.dados) {
+          appState = resultado.dados;
+          if (!appState.afastamentos) appState.afastamentos = [];
+          if (!appState.ocorrencias) appState.ocorrencias = [];
+          if (!appState.frota) appState.frota = [];
+          if (!appState.efetivo) appState.efetivo = [];
+          if (!appState.plantoes) appState.plantoes = [];
+          if (!appState.avisos) appState.avisos = [];
+          document.getElementById('status-nuvem').innerHTML = `<i class="fa-solid fa-cloud-check text-green-400"></i> Nuvem Sincronizada`;
+          const btn = document.getElementById('btn-carregar-cfg');
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-users-gear"></i> 1. Carregar Efetivo e Frota`;
+          }
+        }
+      } catch (erro) {
+        document.getElementById('status-nuvem').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-400"></i> Falha na Nuvem`;
+      }
+    }
+
+    window.alternarRelatorio = function(tipo) {
+      document.getElementById('doc-escala').classList.add('hidden');
+      document.getElementById('doc-passagem').classList.add('hidden');
+      document.getElementById('doc-hora').classList.add('hidden');
+      
+      const inativo = "px-3 md:px-5 py-2 rounded-lg font-bold text-xs md:text-sm bg-slate-700 text-slate-300 hover:bg-slate-600 transition";
+      document.getElementById('btn-aba-escala').className = inativo;
+      document.getElementById('btn-aba-passagem').className = inativo;
+      document.getElementById('btn-aba-hora').className = inativo;
+      
+      const doc = document.getElementById(`doc-${tipo}`);
+      const btn = document.getElementById(`btn-aba-${tipo}`);
+      
+      if(doc) doc.classList.remove('hidden');
+      if(btn) btn.className = "px-3 md:px-5 py-2 rounded-lg font-bold text-xs md:text-sm bg-pmesp-blue text-white shadow transition";
+    };
+
+    window.sincronizarComNuvem = async function(silencioso = false) {
+      try {
+        document.getElementById('status-nuvem').innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-amber-400"></i> Gravando...`;
+        try {
+          const respGet = await fetch(API_URL + '?t=' + Date.now());
+          const resGet = await respGet.json();
+          if (resGet.sucesso && resGet.dados) {
+            const nuvem = resGet.dados;
+            ['afastamentos','fechamentoMes','ordemEfetivo','patrimonio','favoritos','agenda','calendarUrl','mudancasProntidao'].forEach(ch => {
+              if (nuvem[ch] !== undefined) appState[ch] = nuvem[ch];
+            });
+            if (Array.isArray(nuvem.efetivo) && nuvem.efetivo.length > 0) appState.efetivo = nuvem.efetivo;
+          }
+        } catch (e) {}
+
+        const resposta = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ dados: appState, usuario: "Plantao", estacao: "Geral" })
+        });
+        const resultado = await resposta.json();
+        if (resultado.sucesso) {
+          document.getElementById('status-nuvem').innerHTML = `<i class="fa-solid fa-cloud-check text-green-400"></i> Salvo na Nuvem!`;
+        } else {
+          document.getElementById('status-nuvem').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-400"></i> Erro Planilha`;
+          alert("A planilha recusou a gravação: " + (resultado.erro || "Publique uma Nova Versão no Apps Script."));
+        }
+        return resultado.sucesso;
+      } catch (erro) {
+        document.getElementById('status-nuvem').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-400"></i> Erro Conexão`;
+        return false;
+      }
+    };
+
+    window.salvarRelatorioNaNuvem = async function() {
+      const btn = document.getElementById('btn-salvar-nuvem');
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span class="hidden md:inline">Salvando...</span>`;
+      btn.disabled = true;
+
+      const htmlEscala = document.getElementById('folha-escala').innerHTML;
+      const htmlPassagem = document.getElementById('folha-passagem').innerHTML;
+      const htmlHora = document.getElementById('folha-hora').innerHTML;
+
+      if(!appState.plantoes) appState.plantoes = [];
+
+      const idx = appState.plantoes.findIndex(p => p.id === idPlantaoAtual);
+      if(idx > -1) {
+        appState.plantoes[idx].htmlEscala = htmlEscala;
+        appState.plantoes[idx].htmlPassagem = htmlPassagem;
+        appState.plantoes[idx].htmlHora = htmlHora;
+      } else {
+        appState.plantoes.push({ id: idPlantaoAtual, htmlEscala: htmlEscala, htmlPassagem: htmlPassagem, htmlHora: htmlHora });
+      }
+
+      const sucesso = await window.sincronizarComNuvem(true);
+      if(sucesso) btn.innerHTML = `<i class="fa-solid fa-check"></i> <span class="hidden md:inline">Salvo!</span>`;
+      else btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <span class="hidden md:inline">Erro</span>`;
+
+      setTimeout(() => { btn.innerHTML = originalHtml; btn.disabled = false; }, 2500);
+    };
+
+    window.verificarEGerarDocumentos = function() {
+      const dataSelecionada = document.getElementById('plantao-data').value;
+      const estacao = document.getElementById('plantao-estacao').value;
+      if(!dataSelecionada) return;
+
+      idPlantaoAtual = `${dataSelecionada}_${estacao.toUpperCase()}`;
+
+      if(appState.plantoes && appState.plantoes.find(p => p.id === idPlantaoAtual)) {
+        document.getElementById('modal-substituir').classList.remove('hidden');
+      } else {
+        window.processarGeracaoNova();
+      }
+    };
+
+    window.carregarRelatorioSalvo = function() {
+      document.getElementById('modal-substituir').classList.add('hidden');
+      const plantaoSalvo = appState.plantoes.find(p => p.id === idPlantaoAtual);
+      if(plantaoSalvo) {
+        document.getElementById('folha-escala').innerHTML = plantaoSalvo.htmlEscala;
+        document.getElementById('folha-passagem').innerHTML = plantaoSalvo.htmlPassagem;
+        if(plantaoSalvo.htmlHora) document.getElementById('folha-hora').innerHTML = plantaoSalvo.htmlHora;
+        
+        document.getElementById('modal-relatorios').classList.remove('hidden');
+        window.alternarRelatorio('escala');
+      }
+    };
+
+    window.iniciarDashboardDiario = function() {
+      try {
+        if (!appState.efetivo || appState.efetivo.length === 0) {
+          alert("Aguarde o carregamento dos dados da nuvem ou verifique se há efetivo cadastrado."); return;
+        }
+
+        const dataSelecionada = document.getElementById('plantao-data').value;
+        const estacao = document.getElementById('plantao-estacao').value;
+        if(!dataSelecionada) return;
+
+        idPlantaoAtual = `${dataSelecionada}_${estacao.toUpperCase()}`;
+
+        const [anoStr, mesStr, diaStr] = dataSelecionada.split('-');
+        const dataAtual = new Date(parseInt(anoStr), parseInt(mesStr)-1, parseInt(diaStr));
+        const diaSemana = dataAtual.getDay(); 
+        const diaMes = dataAtual.getDate();
+        const dataIso = dataSelecionada;
+        
+        const aniversariantes = appState.efetivo.filter(e => {
+          if(!e.aniversario) return false;
+          const partes = e.aniversario.split('/'); 
+          return partes[0] === diaStr && partes[1] === mesStr;
+        });
+        if(aniversariantes.length > 0) {
+          const nomes = aniversariantes.map(a => `${a.graduacao} ${a.nomeGuerra}`).join(', ');
+          document.getElementById('aviso-aniversario').classList.remove('hidden');
+          document.querySelector('#aviso-aniversario span').innerHTML = `Aniversariante(s) do dia: <strong>${nomes}</strong>! Desejamos felicidades! 🎉`;
+        } else {
+          document.getElementById('aviso-aniversario').classList.add('hidden');
+        }
+
+        const diff = Math.floor((dataAtual - new Date(2026, 10, 6)) / (1000*60*60*24));
+        let cicloMil = diff % 3; if(cicloMil < 0) cicloMil += 3;
+        gProntidao = ['VERDE', 'AMARELA', 'AZUL'][cicloMil];
+
+        const restoBcp = parseInt(diaStr) % 4;
+        gBcpDia = ''; gBcpNoite = '';
+        if(restoBcp === 1) { gBcpDia = 'C'; gBcpNoite = 'A'; }
+        if(restoBcp === 2) { gBcpDia = 'D'; gBcpNoite = 'C'; }
+        if(restoBcp === 3) { gBcpDia = 'B'; gBcpNoite = 'D'; }
+        if(restoBcp === 0) { gBcpDia = 'A'; gBcpNoite = 'B'; }
+
+        document.getElementById('info-turno').innerText = `Prontidão ${gProntidao} — Equipe BCP Dia: ${gBcpDia} / Noite: ${gBcpNoite}`;
+
+        const avisosHojeOp = (appState.avisos || []).filter(a => {
+          if (a.secao !== 'Operacional') return false;
+          if (a.frequencia === 'Diário') return true;
+          if (a.frequencia === 'Semanal' && parseInt(a.valorData) === diaSemana) return true;
+          if (a.frequencia === 'Mensal' && parseInt(a.valorData) === diaMes) return true;
+          if (a.frequencia === 'Período') {
+            if (dataIso >= a.dataInicio && dataIso <= a.dataFim) return true;
+          }
+          return false;
+        });
+
+        const containerAvisos = document.getElementById('container-avisos-hoje');
+        if(avisosHojeOp.length > 0) {
+          let htmlBanner = '';
+          avisosHojeOp.forEach(av => {
+            htmlBanner += `
+              <div class="bg-amber-50 border-l-4 border-amber-500 p-3 rounded shadow-sm flex justify-between items-center">
+                <div class="flex flex-col gap-1">
+                  <div>
+                    <span class="text-[9px] font-bold uppercase bg-amber-500 text-white px-2 py-0.5 rounded mr-2">ORDEM / AVISO</span>
+                    <span class="font-bold text-amber-800 text-sm">${av.tipo}</span>
+                  </div>
+                  <p class="text-xs text-slate-700">${av.obs}</p>
+                </div>
+              </div>
+            `;
+          });
+          containerAvisos.innerHTML = htmlBanner;
+          containerAvisos.classList.remove('hidden');
+        } else {
+          containerAvisos.innerHTML = '';
+          containerAvisos.classList.add('hidden');
+        }
+
+        let frotaEstacao = appState.frota.filter(f => (f.estacao || '').trim().toUpperCase() === estacao.trim().toUpperCase());
+        let htmlFrota = '';
+        frotaEstacao.forEach(v => {
+          let cor = ''; let stat = (v.status || '').toUpperCase();
+          if (stat === 'OPERANDO' || stat === 'OPERACIONAL') cor = 'text-green-700 bg-green-50 border-green-300';
+          else if (stat === 'REVEZAMENTO') cor = 'text-blue-700 bg-blue-50 border-blue-300';
+          else if (stat === 'RESERVA') cor = 'text-amber-700 bg-amber-50 border-amber-300';
+          else cor = 'text-red-700 bg-red-50 border-red-300';
+          
+          htmlFrota += `
+            <div class="flex justify-between items-center p-2 border rounded ${cor} text-xs font-bold mb-1 transition-colors duraton-200">
+              <span class="w-20">${v.prefixo}</span>
+              <select class="p-1 rounded border outline-none bg-white text-slate-700 frota-status-select" data-prefixo="${v.prefixo}" onchange="window.mudarCorFrota(this)">
+                <option value="Operando" ${stat === 'OPERANDO' || stat === 'OPERACIONAL' ? 'selected' : ''}>Operando</option>
+                <option value="Revezamento" ${stat === 'REVEZAMENTO' ? 'selected' : ''}>Revezamento</option>
+                <option value="Reserva" ${stat === 'RESERVA' ? 'selected' : ''}>Reserva</option>
+                <option value="Baixada" ${stat === 'BAIXADA' || stat === 'INOPERANTE' ? 'selected' : ''}>Baixada</option>
+              </select>
+            </div>
+          `;
+        });
+        document.getElementById('cfg-lista-frota').innerHTML = htmlFrota || '<p class="text-xs text-slate-400">Nenhuma viatura cadastrada nesta estação.</p>';
+
+        let efMilitar = [], efBcpDia = [], efBcpNoite = [];
+        todosEstacao = appState.efetivo.filter(e => (e.estacao || '').trim().toUpperCase() === estacao.trim().toUpperCase());
+        
+        todosEstacao.forEach(ef => {
+          let tipo = ef.tipo || '';
+          let pront = (ef.prontidao || '').toUpperCase();
+          if (tipo === 'Militar' && pront === gProntidao) efMilitar.push(ef);
+          if ((tipo === 'BCP' || tipo === 'BCM') && pront.includes(gBcpDia)) efBcpDia.push(ef);
+          if ((tipo === 'BCP' || tipo === 'BCM') && pront.includes(gBcpNoite)) efBcpNoite.push(ef);
+        });
+
+        nomesDisponiveisHoras = []; 
+
+        const gerarTrEfetivo = (lista, tituloCor) => {
+          if(lista.length === 0) return `<tr><td colspan="5" class="p-2 text-center text-slate-400 border-b">Nenhum integrante deste grupo na escala.</td></tr>`;
+          
+          let html = `<tr><td colspan="5" class="bg-slate-100 font-bold uppercase text-[9px] p-1.5 text-center text-slate-600">${tituloCor}</td></tr>`;
+          
+          lista.forEach(ef => {
+            const chaveEf = obterChaveUnica(ef);
+            const domId = obterDomId(chaveEf);
+
+            let afastamento = (appState.afastamentos || []).find(a => (a.id === chaveEf || a.id === ef.id || a.id === ef.re || a.re === ef.re) && a.data === dataSelecionada);
+            let isAfastado = (afastamento && !['3','2','1','OBS'].includes(afastamento.valor));
+            let opacidade = isAfastado ? "opacity-50" : "";
+            
+            // Verifica se já existe ocorrência salva no plantão para esta data para restaurar na tela
+            let ocoExistente = (appState.ocorrencias || []).find(o => o.data === dataSelecionada && (o.id === chaveEf || o.re === ef.re || o.nomeGuerra === ef.nomeGuerra));
+            let valOcoSalvo = ocoExistente && ['FALTA','FOLGA','TROCA'].includes(ocoExistente.valor) ? ocoExistente.valor : '';
+            let obsOcoSalvo = ocoExistente ? (ocoExistente.obs || '') : '';
+            let subOcoSalvo = ocoExistente ? (ocoExistente.substituto || '') : '';
+
+            if(!isAfastado && (tituloCor.includes('MILITARES') || tituloCor.includes('NOITE'))) {
+              nomesDisponiveisHoras.push(`${ef.graduacao} ${ef.nomeGuerra}`);
+            }
+
+            let efBaseTipo = (ef.tipo === 'BCP' || ef.tipo === 'BCM') ? 'BCP' : 'Militar';
+            let opcoesSubst = todosEstacao.filter(e => {
+              let t = (e.tipo === 'BCP' || e.tipo === 'BCM') ? 'BCP' : 'Militar';
+              return t === efBaseTipo && obterChaveUnica(e) !== chaveEf;
+            }).map(e => {
+              let nomeSub = `${e.graduacao} ${e.nomeGuerra}`;
+              return `<option value="${nomeSub}" ${subOcoSalvo === nomeSub ? 'selected' : ''}>${nomeSub}</option>`;
+            }).join('');
+
+            html += `
+              <tr class="hover:bg-slate-50 border-b ${opacidade} efetivo-linha" 
+                  data-nome="${ef.graduacao} ${ef.nomeGuerra}" 
+                  data-chave="${chaveEf}" 
+                  data-domid="${domId}" 
+                  data-re="${ef.re || ''}" 
+                  data-guerra="${ef.nomeGuerra || ''}" 
+                  data-tipo="${efBaseTipo}">
+                <td class="p-2 w-[120px] max-w-[120px] whitespace-normal break-words leading-tight">
+                  <span class="font-bold text-slate-700">${ef.graduacao} ${ef.nomeGuerra}</span>
+                  ${isAfastado ? `<br><span class="text-[9px] text-red-600 font-bold leading-none block mt-1">AFASTADO: ${afastamento.valor}</span>` : ''}
+                </td>
+                <td class="p-2 w-[100px]">
+                  <select class="w-full border rounded p-1 text-[9px] font-bold cfg-vtr-select bg-white" ${isAfastado?'disabled':''}></select>
+                </td>
+                <td class="p-2 text-center">
+                  <div class="func-btn-group flex flex-wrap gap-1 justify-center" ${isAfastado?'style="pointer-events:none;"':''}>
+                    <input type="checkbox" id="f-cpront-${domId}" value="CMT PRONT" class="func-chk"><label for="f-cpront-${domId}">Cmt Pront</label>
+                    <input type="checkbox" id="f-cgu-${domId}" value="CMT GU" class="func-chk"><label for="f-cgu-${domId}">Cmt GU</label>
+                    <input type="checkbox" id="f-cbdia-${domId}" value="CB DIA" class="func-chk"><label for="f-cbdia-${domId}">Cb Dia</label>
+                    <input type="checkbox" id="f-mot-${domId}" value="MOT" class="func-chk"><label for="f-mot-${domId}">Mot</label>
+                    <input type="checkbox" id="f-aux-${domId}" value="AUX" class="func-chk"><label for="f-aux-${domId}">Aux</label>
+                    <input type="checkbox" id="f-tel-${domId}" value="TEL" class="func-chk"><label for="f-tel-${domId}">Tel</label>
+                  </div>
+                </td>
+                <td class="p-2 text-center min-w-[120px]" colspan="2">
+                  <<select id="sel-afast-${domId}" onchange="window.toggleAfastamento('${domId}')" class="w-full border rounded p-1 text-[9px] font-bold bg-white" ${isAfastado?'disabled':''}>
+                    <option value="" ${valOcoSalvo === '' ? 'selected' : ''}>Presente</option>
+                    <option value="FALTA" ${valOcoSalvo === 'FALTA' ? 'selected' : ''}>Falta Integral</option>
+                    <option value="FALTA_PARCIAL" ${valOcoSalvo === 'FALTA_PARCIAL' ? 'selected' : ''}>Falta Parcial (Saiu cedo)</option>
+                    <option value="FOLGA" ${valOcoSalvo === 'FOLGA' ? 'selected' : ''}>Folga</option>
+                    <option value="TROCA" ${valOcoSalvo === 'TROCA' ? 'selected' : ''}>Troca</option>
+                  </select>
+                </td>
+              </tr>
+              <tr id="tr-obs-${domId}" class="${valOcoSalvo ? '' : 'hidden'} bg-orange-50 border-b border-orange-200">
+                <td colspan="5" class="p-2">
+                  <div class="flex gap-2 items-center flex-wrap" id="box-afast-${domId}">
+                  <div id="div-parcial-${domId}" class="${valOcoSalvo === 'FALTA_PARCIAL' ? 'flex' : 'hidden'} gap-2 w-full mt-1 items-center">
+                      <label class="text-[9px] font-bold text-rose-800">Saída às:</label>
+                      <input type="time" id="hora-parcial-${domId}" class="text-[10px] border rounded p-1 font-bold bg-white">
+                      <select id="cod-parcial-${domId}" class="text-[10px] border rounded p-1 font-bold bg-white">
+                        <option value="2">Cód. SIPA 2 (12h a &lt;18h)</option>
+                        <option value="1">Cód. SIPA 1 (8h a &lt;12h)</option>
+                        <option value="0">Cód. SIPA 0 (&lt;8h)</option>
+                      </select>
+                    </div>
+                    <span id="lbl-afast-${domId}" class="text-[9px] font-bold uppercase w-20">${valOcoSalvo ? valOcoSalvo + ':' : ''}</span>
+                    <div id="div-troca-${domId}" class="${valOcoSalvo === 'TROCA' ? 'flex' : 'hidden'} gap-2 w-full mt-1">
+                      <select id="sel-subst-${domId}" class="text-[10px] border rounded p-1 font-bold w-1/3">
+                        <option value="">-- Selecione o Substituto --</option>
+                        ${opcoesSubst}
+                      </select>
+                      <input type="date" id="data-troca-${domId}" class="text-[10px] border rounded p-1" title="Data da Reposição">
+                    </div>
+                    <input type="text" id="obs-afast-${domId}" value="${obsOcoSalvo}" class="flex-1 text-[10px] border rounded p-1 mt-1 w-full" placeholder="Observações e Motivo...">
+                  </div>
+                </td>
+              </tr>
+            `;
+          });
+          return html;
+        };
+
+        document.getElementById('cfg-lista-militares').innerHTML = gerarTrEfetivo(efMilitar, `MILITARES (24h) - PRONTIDÃO ${gProntidao}`);
+        document.getElementById('cfg-lista-bcp-dia').innerHTML = gerarTrEfetivo(efBcpDia, `MUNICIPAIS DIA (07h30-19h30) - EQUIPE ${gBcpDia}`);
+        document.getElementById('cfg-lista-bcp-noite').innerHTML = gerarTrEfetivo(efBcpNoite, `MUNICIPAIS NOITE (19h30-07h30) - EQUIPE ${gBcpNoite}`);
+
+        window.atualizarSelectsDeViaturas();
+        
+        const containerHoras = document.getElementById('cfg-escala-horas');
+        if(containerHoras.innerHTML.trim() === '') {
+          contadorHora = 0;
+          horariosIniciais.forEach(h => window.adicionarQuartoHora(h));
+        }
+
+        efetivoExtra = []; 
+        window.renderTabelaExtra();
+        document.getElementById('painel-configuracao').classList.remove('hidden');
+      } catch(e) {
+        console.error("Erro no Dashboard:", e);
+        alert("Ops! Ocorreu um erro na montagem do painel. Verifique se o Efetivo foi baixado corretamente da nuvem.");
+      }
+    };
+
+    window.mudarCorFrota = function(sel) {
+      const card = sel.parentElement;
+      const val = sel.value.toUpperCase();
+      card.classList.remove('text-green-700', 'bg-green-50', 'border-green-300', 'text-amber-700', 'bg-amber-50', 'border-amber-300', 'text-red-700', 'bg-red-50', 'border-red-300', 'text-blue-700', 'bg-blue-50', 'border-blue-300');
+      
+      if(val === 'OPERANDO' || val === 'OPERACIONAL') card.classList.add('text-green-700', 'bg-green-50', 'border-green-300');
+      else if(val === 'REVEZAMENTO') card.classList.add('text-blue-700', 'bg-blue-50', 'border-blue-300');
+      else if(val === 'RESERVA') card.classList.add('text-amber-700', 'bg-amber-50', 'border-amber-300');
+      else card.classList.add('text-red-700', 'bg-red-50', 'border-red-300');
+      
+      window.atualizarSelectsDeViaturas();
+    };
+
+    window.atualizarSelectsDeViaturas = function() {
+      const selectsAtuais = document.querySelectorAll('.frota-status-select');
+      let optVtrDisp = `<option value="">-- Nenhuma --</option>`;
+      
+      selectsAtuais.forEach(sel => {
+        let val = sel.value.toUpperCase();
+        if(val === "OPERANDO" || val === "OPERACIONAL" || val === "REVEZAMENTO") {
+          let prefixo = sel.getAttribute('data-prefixo');
+          optVtrDisp += `<option value="${prefixo}">${prefixo} ${val==='REVEZAMENTO'?'(Rev.)':''}</option>`;
+        }
+      });
+
+      document.querySelectorAll('.cfg-vtr-select').forEach(vSel => {
+        let valAnterior = vSel.value;
+        vSel.innerHTML = optVtrDisp;
+        vSel.value = valAnterior; 
+      });
+    };
+
+    window.toggleAfastamento = function(domId) {
+      const sel = document.getElementById(`sel-afast-${domId}`);
+      const trObs = document.getElementById(`tr-obs-${domId}`);
+      const lbl = document.getElementById(`lbl-afast-${domId}`);
+      const divTroca = document.getElementById(`div-troca-${domId}`);
+      const divParcial = document.getElementById(`div-parcial-${domId}`);
+      const val = sel ? sel.value : "";
+
+      if (val === "") { trObs.classList.add('hidden'); return; }
+      trObs.classList.remove('hidden');
+      divTroca.classList.add('hidden');
+      if (divParcial) divParcial.classList.add('hidden');
+
+      if (val === "FALTA") {
+        lbl.className = "text-[9px] font-bold uppercase w-24 text-red-600";
+        lbl.innerText = "Falta:";
+      } else if (val === "FALTA_PARCIAL") {
+        lbl.className = "text-[9px] font-bold uppercase w-24 text-rose-700";
+        lbl.innerText = "Falta Parcial:";
+        if (divParcial) { divParcial.classList.remove('hidden'); divParcial.classList.add('flex'); }
+      } else if (val === "FOLGA") {
+        lbl.className = "text-[9px] font-bold uppercase w-24 text-green-600";
+        lbl.innerText = "Folga:";
+      } else if (val === "TROCA") {
+        lbl.className = "text-[9px] font-bold uppercase w-24 text-amber-600";
+        lbl.innerText = "Troca por:";
+        divTroca.classList.remove('hidden'); divTroca.classList.add('flex');
+      }
+    };
+    
+    let efetivoExtra = [];
+    
+    window.abrirModalIncluirEfetivo = function() {
+        document.getElementById('modal-efetivo-extra').classList.remove('hidden');
+        
+        let selectHtml = '<option value="">-- Selecionar da Nuvem --</option>';
+        (appState.efetivo || []).forEach(e => {
+           let nm = `${e.graduacao} ${e.nomeGuerra}`;
+           selectHtml += `<option value="${nm}">${nm} (${e.estacao})</option>`;
+        });
+        document.getElementById('extra-nome-select').innerHTML = selectHtml;
+        document.getElementById('extra-nome-livre').value = '';
+        document.getElementById('extra-hora-inicio').value = '';
+        document.getElementById('extra-hora-fim').value = '';
+        document.getElementById('extra-obs').value = '';
+    };
+    
+    window.fecharModalExtra = function() {
+        document.getElementById('modal-efetivo-extra').classList.add('hidden');
+    };
+    
+    window.salvarEfetivoExtra = function() {
+        const nomeSelecionado = document.getElementById('extra-nome-select').value;
+        const nomeLivre = document.getElementById('extra-nome-livre').value.trim();
+        const nome = nomeLivre || nomeSelecionado;
+        
+        const motiv = document.getElementById('extra-motivo').value;
+        const func = document.getElementById('extra-funcao').value;
+        
+        const horaInicio = document.getElementById('extra-hora-inicio').value;
+        const horaFim = document.getElementById('extra-hora-fim').value;
+        const obs = document.getElementById('extra-obs').value.trim();
+        
+        if(!nome) { alert("Selecione um integrante na lista ou digite o nome."); return; }
+        
+        let motivFinal = motiv;
+        if(horaInicio || horaFim) {
+           let hI = horaInicio || '??:??';
+           let hF = horaFim || '??:??';
+           motivFinal += ` (${hI} às ${hF})`;
+        }
+        if(obs) motivFinal += ` - ${obs}`;
+        
+        const extraObj = { nome: nome.toUpperCase(), motiv: motivFinal, func };
+        efetivoExtra.push(extraObj);
+        
+        window.renderTabelaExtra();
+        fecharModalExtra();
+    };
+    
+    window.renderTabelaExtra = function() {
+        let t = document.getElementById('cfg-lista-extra');
+        if(!t) {
+            let tbody = document.createElement('tbody');
+            tbody.id = 'cfg-lista-extra';
+            tbody.className = 'divide-y divide-slate-100';
+            document.querySelector('#cfg-lista-militares').parentElement.appendChild(tbody);
+            t = tbody;
+        }
+        
+        t.innerHTML = `<tr><td colspan="5" class="bg-indigo-50 font-bold uppercase text-[9px] p-1.5 text-center text-indigo-700 border-t-2 border-indigo-200">EFETIVO EXTRA (DEJEM / ADEQUAÇÃO)</td></tr>`;
+        
+        efetivoExtra.forEach((ext, index) => {
+            let id = 'EX_' + index;
+            t.innerHTML += `
+              <tr class="hover:bg-slate-50 border-b efetivo-linha" data-nome="${ext.nome}" data-chave="${id}" data-domid="${id}" data-tipo="Extra">
+                <td class="p-2 w-[120px] max-w-[120px] whitespace-normal break-words leading-tight">
+                  <span class="font-bold text-slate-700">${ext.nome}</span>
+                  <br><span class="text-[9px] text-indigo-600 font-bold leading-none block mt-1">${ext.motiv}</span>
+                </td>
+                <td class="p-2 w-[100px]">
+                  <select class="w-full border rounded p-1 text-[9px] font-bold cfg-vtr-select bg-white"></select>
+                </td>
+                <td class="p-2 text-center">
+                  <div class="func-btn-group flex flex-wrap gap-1 justify-center">
+                    <input type="checkbox" id="f-cpront-${id}" value="CMT PRONT" class="func-chk" ${ext.func==='CMT PRONT'?'checked':''}><label for="f-cpront-${id}">Cmt Pront</label>
+                    <input type="checkbox" id="f-cgu-${id}" value="CMT GU" class="func-chk" ${ext.func==='CMT GU'?'checked':''}><label for="f-cgu-${id}">Cmt GU</label>
+                    <input type="checkbox" id="f-cbdia-${id}" value="CB DIA" class="func-chk" ${ext.func==='CB DIA'?'checked':''}><label for="f-cbdia-${id}">Cb Dia</label>
+                    <input type="checkbox" id="f-mot-${id}" value="MOT" class="func-chk" ${ext.func==='MOT'?'checked':''}><label for="f-mot-${id}">Mot</label>
+                    <input type="checkbox" id="f-aux-${id}" value="AUX" class="func-chk" ${ext.func==='AUX'?'checked':''}><label for="f-aux-${id}">Aux</label>
+                    <input type="checkbox" id="f-tel-${id}" value="TEL" class="func-chk" ${ext.func==='TEL'?'checked':''}><label for="f-tel-${id}">Tel</label>
+                  </div>
+                </td>
+                <td class="p-2 text-center min-w-[120px]" colspan="2">
+                   <button onclick="efetivoExtra.splice(${index}, 1); renderTabelaExtra();" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i> Remover</button>
+                </td>
+              </tr>
+            `;
+        });
+        window.atualizarSelectsDeViaturas();
+    };
+
+    window.adicionarQuartoHora = function(periodoTxt = "") {
+      const tbody = document.getElementById('cfg-escala-horas');
+      const tr = document.createElement('tr');
+      const currId = contadorHora++;
+      
+      let optNomes = `<option value="">-- Selecione --</option>`;
+      nomesDisponiveisHoras.forEach(n => optNomes += `<option value="${n}">${n}</option>`);
+
+      tr.id = `hora-row-${currId}`;
+      tr.innerHTML = `
+        <td class="p-1 border"><input type="text" id="hr-per-${currId}" class="w-full text-[10px] p-1.5 border rounded font-bold text-center" placeholder="Ex: 22:00 às 00:00" value="${periodoTxt}"></td>
+        <td class="p-1 border"><select id="hr-nom-${currId}" class="w-full text-[10px] p-1.5 border rounded bg-white font-bold text-pmesp-blue">${optNomes}</select></td>
+        <td class="p-1 border"><input type="text" id="hr-obs-${currId}" class="w-full text-[10px] p-1.5 border rounded" placeholder="Obs / Função..."></td>
+        <td class="p-1 border text-center">
+          <button onclick="document.getElementById('hora-row-${currId}').remove()" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash-can"></i></button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    };
+
+    function setTxt(id, txt) { const el = document.getElementById(id); if (el) el.innerText = txt; }
+    function setHtml(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+    function getVal(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+
+    window.processarGeracaoNova = async function() {
+      document.getElementById('modal-substituir').classList.add('hidden');
+      try {
+        const dataSelecionada = document.getElementById('plantao-data').value;
+        const estacao = document.getElementById('plantao-estacao').value;
+        if (!dataSelecionada) return;
+        
+        const [anoStr, mesStr, diaStr] = dataSelecionada.split('-');
+        const dataAtual = new Date(parseInt(anoStr), parseInt(mesStr)-1, parseInt(diaStr));
+        
+        let cmtProntNome = '', cbDiaNome = '';
+        let telDiaNames = [], telNoiteNames = [];
+        let mapaVtrs = {};
+
+        let htmlAusentes = '';
+        let htmlMotivos = '';
+
+        let ocorrencias_para_salvar = [];
+        let chavesEscaladasHoje = [];
+
+        document.querySelectorAll('.efetivo-linha').forEach(linha => {
+          if(linha.classList.contains('opacity-50')) return; 
+          
+          let nome = linha.getAttribute('data-nome');
+          let chave = linha.getAttribute('data-chave');
+          let domId = linha.getAttribute('data-domid');
+          let reMilitar = linha.getAttribute('data-re') || '';
+          let guerraMilitar = linha.getAttribute('data-guerra') || '';
+          let tipoLinha = linha.getAttribute('data-tipo');
+
+          if (tipoLinha !== 'Extra' && chave) {
+            chavesEscaladasHoje.push(chave);
+          }
+
+          let nodeVtr = linha.querySelector('.cfg-vtr-select');
+          let vtrSelect = nodeVtr ? nodeVtr.value : '';
+          
+          let nodeAfast = document.getElementById(`sel-afast-${domId}`);
+          let valAfast = nodeAfast ? nodeAfast.value : "";
+          
+          let isFalta = (valAfast === 'FALTA');
+          let isFolga = (valAfast === 'FOLGA');
+          let isTroca = (valAfast === 'TROCA');
+          
+          let nomeEfetivoTrabalho = nome;
+          let nodeObs = document.getElementById(`obs-afast-${domId}`);
+          let obsTxt = nodeObs ? nodeObs.value.trim() : '';
+
+          if (isTroca) {
+            let sel = document.getElementById(`sel-subst-${domId}`);
+            let dt = document.getElementById(`data-troca-${domId}`);
+            let dtVal = dt && dt.value ? dt.value.split('-').reverse().join('/') : '';
+            let subst = sel ? sel.value : '';
+            if(subst) nomeEfetivoTrabalho = subst;
+            
+            let obsCompletaTroca = `${dtVal ? 'Reposição em ' + dtVal + ' ' : ''}${obsTxt}`.trim();
+            htmlAusentes += `${nome} / ${subst}<br>`;
+            htmlMotivos += `TROCA DE SERVIÇO ${obsCompletaTroca ? '- ' + obsCompletaTroca : ''}<br>`;
+            
+            ocorrencias_para_salvar.push({ 
+              id: chave, 
+              re: reMilitar, 
+              nomeGuerra: guerraMilitar, 
+              estacao: estacao,
+              data: dataSelecionada, 
+              valor: 'TROCA', 
+              substituto: subst, 
+              obs: obsCompletaTroca 
+            });
+
+            // Registra também a presença extra do substituto no mesmo dia para aparecer na reconciliação dele
+            if (subst) {
+              let efSub = (appState.efetivo || []).find(e => `${e.graduacao} ${e.nomeGuerra}`.toUpperCase() === subst.toUpperCase());
+              if (efSub) {
+                ocorrencias_para_salvar.push({
+                  id: obterChaveUnica(efSub),
+                  re: efSub.re || '',
+                  nomeGuerra: efSub.nomeGuerra || '',
+                  estacao: estacao,
+                  data: dataSelecionada,
+                  valor: 'EXTRA',
+                  substituto: '',
+                  obs: `TROCA NO LUGAR DE ${nome} ${obsCompletaTroca ? '(' + obsCompletaTroca + ')' : ''}`.trim()
+                });
+              }
+            }
+          } else if (isFalta) {
+            htmlAusentes += `${nome}<br>`;
+            htmlMotivos += `FALTA AO SERVIÇO ${obsTxt ? '- ' + obsTxt : ''}<br>`;
+            ocorrencias_para_salvar.push({ 
+              id: chave, 
+              re: reMilitar, 
+              nomeGuerra: guerraMilitar, 
+              estacao: estacao,
+              data: dataSelecionada, 
+              valor: 'FALTA', 
+              obs: obsTxt 
+            });
+            return; 
+          } else if (isFolga) {
+            htmlAusentes += `${nome}<br>`;
+            htmlMotivos += `FOLGA ${obsTxt ? '- ' + obsTxt : ''}<br>`;
+            ocorrencias_para_salvar.push({ 
+              id: chave, 
+              re: reMilitar, 
+              nomeGuerra: guerraMilitar, 
+              estacao: estacao,
+              data: dataSelecionada, 
+              valor: 'FOLGA', 
+              obs: obsTxt 
+            });
+            return;
+              
+          } else if (valAfast === 'FALTA_PARCIAL') {
+            const hSaida = document.getElementById(`hora-parcial-${domId}`)?.value || '';
+            const codSipa = document.getElementById(`cod-parcial-${domId}`)?.value || '2';
+            const detSaida = `${hSaida ? 'Saída às ' + hSaida + ' ' : ''}(Cód. SIPA ${codSipa})${obsTxt ? ' - ' + obsTxt : ''}`.trim();
+            htmlAusentes += `${nome}<br>`;
+            htmlMotivos += `FALTA PARCIAL - ${detSaida}<br>`;
+            ocorrencias_para_salvar.push({
+              id: chave, re: reMilitar, nomeGuerra: guerraMilitar, estacao: estacao,
+              data: dataSelecionada, valor: 'FALTA_PARCIAL', codSipa: codSipa,
+              obs: `FALTA PARCIAL: ${detSaida}`
+            });
+          }
+            
+          
+          let checkedFuncs = Array.from(linha.querySelectorAll('.func-chk:checked')).map(chk => chk.value);
+          
+          if(checkedFuncs.includes('CMT PRONT')) cmtProntNome = nomeEfetivoTrabalho;
+          if(checkedFuncs.includes('CB DIA')) cbDiaNome = nomeEfetivoTrabalho;
+          
+          if(checkedFuncs.includes('TEL')) {
+            if(linha.closest('#cfg-lista-bcp-noite')) telNoiteNames.push(nomeEfetivoTrabalho);
+            else telDiaNames.push(nomeEfetivoTrabalho);
+          }
+
+          if(vtrSelect) {
+            if(!mapaVtrs[vtrSelect]) mapaVtrs[vtrSelect] = { CMT:[], MOT:[], AUX:[] };
+            if(checkedFuncs.includes('CMT GU') || checkedFuncs.includes('CMT PRONT')) mapaVtrs[vtrSelect].CMT.push(nomeEfetivoTrabalho);
+            if(checkedFuncs.includes('MOT')) mapaVtrs[vtrSelect].MOT.push(nomeEfetivoTrabalho);
+            if(checkedFuncs.includes('AUX')) mapaVtrs[vtrSelect].AUX.push(nomeEfetivoTrabalho);
+          }
+        });
+
+        const dataFormatada = `${diaStr} DE ${['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'][parseInt(mesStr)-1]} DE ${anoStr}`;
+        setTxt('out-escala-data', dataFormatada);
+        setTxt('out-escala-estacao', `E. B. ${estacao.toUpperCase()}`);
+        setTxt('out-escala-prontidao', `PRONTIDÃO ${gProntidao}`);
+        setTxt('out-bcp-dia', gBcpDia);
+        setTxt('out-bcp-noite', gBcpNoite);
+
+        setTxt('out-esc-sup', getVal('cfg-sup'));
+        setTxt('out-esc-ofarea', getVal('cfg-ofarea'));
+        setTxt('out-esc-cobomdia', getVal('cfg-cobom-dia'));
+        setTxt('out-esc-cobomnoite', getVal('cfg-cobom-noite'));
+        
+        setTxt('out-esc-cmtpront', cmtProntNome);
+        setTxt('out-esc-ass-cmtpront', cmtProntNome);
+        setTxt('out-esc-cbdia', cbDiaNome);
+        setTxt('out-esc-ass-cbdia', cbDiaNome);
+        setTxt('out-esc-chefemot', cbDiaNome);
+        
+        let strTelGeral = telDiaNames.join(' / ');
+        if(telNoiteNames.length > 0) strTelGeral += (strTelGeral ? " / " : "") + telNoiteNames.join(' / ');
+        setTxt('out-esc-tel', strTelGeral);
+        
+        let selectsAtuais = document.querySelectorAll('.frota-status-select');
+        let htmlGuarnicoes = '';
+        let vtrs = Object.keys(mapaVtrs);
+        
+        for (let i = 0; i < vtrs.length; i++) {
+          let v = vtrs[i];
+          let obj = mapaVtrs[v];
+          let statusV = 'Operando';
+          selectsAtuais.forEach(sel => { if(sel.getAttribute('data-prefixo') === v) statusV = sel.value; });
+          let txtStatus = (statusV.toUpperCase() === 'REVEZAMENTO') ? '<br><span style="font-size:8px;">(REVEZAMENTO)</span>' : '';
+          
+          let strCmt = obj.CMT.join(' / '); let strMot = obj.MOT.join(' / '); let strAux = obj.AUX.map(a => `AUX: ${a}`).join('<br>');
+          let txtGeral = `CMT: ${strCmt}<br>MOT: ${strMot}${strAux ? '<br>'+strAux : ''}`;
+
+          htmlGuarnicoes += `
+            <tr>
+              <td contenteditable="true"><strong>${v} (DIA)</strong>${txtStatus}</td>
+              <td contenteditable="true" class="text-left leading-relaxed">${txtGeral}</td>
+              <td contenteditable="true"><strong>${v} (NOITE)</strong>${txtStatus}</td>
+              <td contenteditable="true" class="text-left leading-relaxed">${txtGeral}</td>
+            </tr>
+          `;
+        }
+        setHtml('out-esc-guarnicoes', htmlGuarnicoes);
+
+        let vtrsReservas = [];
+        selectsAtuais.forEach(sel => { if(sel.value.toUpperCase() === "RESERVA") vtrsReservas.push(sel.getAttribute('data-prefixo')); });
+        setTxt('out-esc-reserva1', vtrsReservas[0] || '---');
+        setTxt('out-esc-reserva2', vtrsReservas[1] || '---');
+
+        let efetivoEstacao = appState.efetivo.filter(e => (e.estacao || '').trim().toUpperCase() === estacao.trim().toUpperCase());
+        efetivoEstacao.forEach(ef => {
+          let isEscalado = false;
+          let p = (ef.prontidao || '').toUpperCase();
+          if (ef.tipo === 'Militar' && p === gProntidao) isEscalado = true;
+          if ((ef.tipo === 'BCP' || ef.tipo === 'BCM') && (p.includes(gBcpDia) || p.includes(gBcpNoite))) isEscalado = true;
+          
+          let chEf = obterChaveUnica(ef);
+          let afastamento = (appState.afastamentos || []).find(a => (a.id === chEf || a.id === ef.id || a.id === ef.re) && a.data === dataSelecionada);
+          if(isEscalado && afastamento && !['3','2','1'].includes(afastamento.valor)) {
+            htmlAusentes += `${ef.graduacao} ${ef.nomeGuerra}<br>`;
+            let mot = afastamento.valor;
+            if(mot === 'F') mot = 'FÉRIAS';
+            if(mot === 'LP') mot = 'LICENÇA PRÊMIO';
+            if(mot === 'A' || mot === 'FS') mot = 'AFASTAMENTO / FOLGA';
+            if(mot === 'OBS') mot = 'TROCA DE SERVIÇO';
+            htmlMotivos += `${mot} ${afastamento.obs ? '- '+afastamento.obs : ''}<br>`;
+          }
+        });
+
+        if(!Array.isArray(appState.ocorrencias)) appState.ocorrencias = [];
+        
+        // Remove ocorrências antigas apenas desta data e desta estação para substituir pelas atuais
+        appState.ocorrencias = appState.ocorrencias.filter(o => {
+            if (o.data !== dataSelecionada) return true;
+            if (o.estacao && o.estacao.toUpperCase() === estacao.toUpperCase()) return false;
+            if (chavesEscaladasHoje.includes(String(o.id))) return false;
+            return true;
+        });
+        
+        ocorrencias_para_salvar.forEach(oc => appState.ocorrencias.push(oc));
+        
+        // Salva Efetivo Extra (DEJEM / Adequação) em appState.ocorrencias com busca case-insensitive
+        if(typeof efetivoExtra !== 'undefined') {
+            efetivoExtra.forEach(ext => {
+                 let nomeBusca = (ext.nome || '').trim().toUpperCase();
+                 let extMilitar = (appState.efetivo || []).find(e => 
+                     `${e.graduacao} ${e.nomeGuerra}`.trim().toUpperCase() === nomeBusca || 
+                     (e.nomeGuerra || '').trim().toUpperCase() === nomeBusca
+                 );
+                 if(extMilitar) {
+                     appState.ocorrencias.push({ 
+                       id: obterChaveUnica(extMilitar), 
+                       re: extMilitar.re || '', 
+                       nomeGuerra: extMilitar.nomeGuerra || '',
+                       estacao: estacao,
+                       data: dataSelecionada, 
+                       valor: 'EXTRA', 
+                       obs: ext.motiv 
+                     });
+                 }
+            });
+        }
+        
+        setHtml('out-escala-nomes-ausentes', htmlAusentes);
+        setHtml('out-escala-motivo-ausentes', htmlMotivos);
+        setHtml('out-pass-nov-pessoal', `<br>` + htmlAusentes.replace(/<br>/g, ', '));
+
+        const diaSemana = dataAtual.getDay(); 
+        const diaMes = dataAtual.getDate();
+        const dataIso = dataSelecionada;
+
+        const avisosHojeOp = (appState.avisos || []).filter(a => {
+          if (a.secao !== 'Operacional') return false;
+          if (a.frequencia === 'Diário') return true;
+          if (a.frequencia === 'Semanal' && parseInt(a.valorData) === diaSemana) return true;
+          if (a.frequencia === 'Mensal' && parseInt(a.valorData) === diaMes) return true;
+          if (a.frequencia === 'Período') {
+            if (dataIso >= a.dataInicio && dataIso <= a.dataFim) return true;
+          }
+          return false;
+        });
+
+        let ordensEscritasHtml = '<strong>6.2. ESCRITAS:</strong><br><br>';
+        if (avisosHojeOp.length > 0) {
+          avisosHojeOp.forEach(av => {
+            ordensEscritasHtml += `- <strong>${av.tipo.toUpperCase()}:</strong> ${av.obs}<br>`;
+          });
+        }
+        setHtml('out-pass-ordens-escritas', ordensEscritasHtml);
+
+        let htmlHorasAbaResumo = '';
+        let htmlHorasDoc3 = '';
+        document.querySelectorAll('#cfg-escala-horas tr').forEach((tr) => {
+          const pId = tr.id.split('-')[2];
+          const per = getVal(`hr-per-${pId}`);
+          const nom = getVal(`hr-nom-${pId}`);
+          const obs = getVal(`hr-obs-${pId}`);
+          const rowStr = `<tr><td contenteditable="true" class="font-bold text-center">${per}</td><td contenteditable="true">${nom}</td><td contenteditable="true">${obs}</td></tr>`;
+          htmlHorasAbaResumo += `<tr><td contenteditable="true">${nom}</td><td contenteditable="true" class="font-bold text-center">${per}</td><td contenteditable="true">${obs}</td></tr>`;
+          htmlHorasDoc3 += rowStr;
+        });
+        setHtml('out-esc-tabela-horas-resumo', htmlHorasAbaResumo);
+        setHtml('out-hora-linhas', htmlHorasDoc3);
+        setTxt('out-hora-estacao', `ESTAÇÃO DE BOMBEIROS DE ${estacao.toUpperCase()}`);
+        setTxt('out-hora-data', `${diaStr}/${mesStr}/${anoStr}`);
+        setTxt('out-hora-pront', gProntidao);
+
+        setTxt('out-pass-pelotao', estacao.toUpperCase());
+        setTxt('out-pass-pel', `PELOTÃO ${estacao.toUpperCase()}`);
+        
+        let dIni = new Date(parseInt(anoStr), parseInt(mesStr)-1, parseInt(diaStr));
+        let dFim = new Date(dIni); dFim.setDate(dFim.getDate() + 1);
+        
+        setTxt('out-pass-data-ini', `${diaStr}/${mesStr}/${anoStr}`);
+        setTxt('out-pass-data-fim', `${String(dFim.getDate()).padStart(2,'0')}/${String(dFim.getMonth()+1).padStart(2,'0')}/${dFim.getFullYear()}`);
+        setTxt('out-pass-pront', gProntidao);
+        setTxt('out-pass-cmt-pront', cmtProntNome);
+
+        let vtrsOp = [], vtrsBx = [];
+        selectsAtuais.forEach(sel => { 
+          let v = sel.value.toUpperCase();
+          if(v === "OPERANDO" || v === "OPERACIONAL" || v === "REVEZAMENTO") vtrsOp.push(sel.getAttribute('data-prefixo'));
+          if(v === "BAIXADA" || v === "INOPERANTE") vtrsBx.push(sel.getAttribute('data-prefixo'));
+        });
+        setTxt('out-pass-vtr-op', vtrsOp.join(', '));
+        setTxt('out-pass-vtr-bx', vtrsBx.join(', '));
+        setTxt('out-pass-vtr-res', vtrsReservas.join(', '));
+
+        document.getElementById('modal-relatorios').classList.remove('hidden');
+        window.alternarRelatorio('escala');
+
+        // Grava automaticamente as ocorrências (Falta, Folga, Troca, Extra) na nuvem assim que gera os documentos!
+        await window.salvarRelatorioNaNuvem();
+
+      } catch (e) {
+        alert("Ops! Ocorreu um erro ao gerar os documentos. Verifique as viaturas e o efetivo escalado.");
+        console.error("Erro interno no Gerador:", e);
+      }
+    };
+
+    window.imprimirRelatorioAtivo = function() {
+      if (!document.getElementById('doc-escala').classList.contains('hidden')) {
+        window.imprimirElemento('folha-escala');
+      } else if (!document.getElementById('doc-passagem').classList.contains('hidden')) {
+        window.imprimirElemento('folha-passagem');
+      } else {
+        window.imprimirElemento('folha-hora');
+      }
+    };
+
+    window.imprimirElemento = function(id) {
+      let printContent = '';
+      if(id === 'folha-escala') printContent = document.getElementById('doc-escala').innerHTML;
+      if(id === 'folha-passagem') printContent = document.getElementById('doc-passagem').innerHTML;
+      if(id === 'folha-hora') printContent = document.getElementById('doc-hora').innerHTML;
+      
+      const janela = window.open('', '', 'width=900,height=600');
+      janela.document.write(`
+        <html>
+          <head>
+            <title>Impressão</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; }
+              .a4-sheet { width: 100%; }
+              .report-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 11px; text-align: center; }
+              .report-table th, .report-table td { border: 1px solid black; padding: 4px; }
+              .report-table th { font-weight: bold; background-color: #f8fafc; }
+              .text-left { text-align: left !important; }
+              .bg-slate-100 { background-color: #f1f5f9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .h-\\[30px\\] { height: 30px; } .h-\\[40px\\] { height: 40px; } .h-6 { height: 24px; }
+              .uppercase { text-transform: uppercase; } .font-bold { font-weight: bold; }
+              .align-top { vertical-align: top; } .leading-relaxed { line-height: 1.625; }
+              [contenteditable="true"] { outline: none !important; }
+            </style>
+          </head>
+          <body>${printContent}</body>
+        </html>
+      `);
+      janela.document.close();
+      janela.focus();
+      setTimeout(() => { janela.print(); janela.close(); }, 500);
+    };
+  </script>
+</body>
+</html>

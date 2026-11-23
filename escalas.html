@@ -1,0 +1,2530 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fechamento e Escalas - 2º SGB</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { pmesp: { blue: '#0B2265', darkblue: '#06133B', red: '#CC0000' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } }
+    }
+  </script>
+  <style>
+    .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+    .bg-weekend { background-color: #f8fafc; }
+    
+    .a4-sheet {
+      width: 29.7cm; 
+      min-height: 21cm;
+      margin: 0 auto 20px auto;
+      background: white;
+      padding: 1cm;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
+      font-family: Arial, sans-serif;
+      color: black;
+      page-break-after: always;
+    }
+    .a4-sheet.portrait {
+      width: 21cm; 
+      min-height: 29.7cm;
+    }
+    .report-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 9px; text-align: center; }
+    .report-table th, .report-table td { border: 1px solid black; padding: 3px; }
+    .report-table th { font-weight: bold; background-color: #f1f5f9; }
+    .text-left { text-align: left !important; }
+    
+    [contenteditable="true"]:hover { background-color: #fef08a; outline: 1px dashed #ca8a04; cursor: text; }
+    [contenteditable="true"]:focus { background-color: #fef9c3; outline: 2px solid #3b82f6; }
+
+    @media print {
+      body * { visibility: hidden; }
+      #doc-container, #doc-container * { visibility: visible; }
+      #doc-container { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; box-shadow: none; background: white; }
+      @page { size: A4 landscape; margin: 1cm; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
+
+  <!-- ================= TELA DE LOGIN ================= -->
+  <div id="tela-login" class="fixed inset-0 z-[200] bg-slate-100 flex items-center justify-center p-4 transition-opacity duration-300">
+    <div class="bg-white max-w-md w-full rounded-2xl shadow-2xl overflow-hidden border-t-4 border-pmesp-red">
+      <div class="bg-pmesp-blue p-8 text-center">
+        <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/20">
+          <i class="fa-solid fa-fire-extinguisher text-amber-400 text-3xl"></i>
+        </div>
+        <h1 class="text-2xl font-black text-white tracking-tight">SISTEMA 2º SGB</h1>
+        <p class="text-amber-400 text-sm font-bold mt-1">Acesso Restrito</p>
+      </div>
+      <div class="p-8">
+        <div id="form-login" class="space-y-6">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Usuário</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fa-solid fa-user text-slate-400"></i></div>
+              <input type="text" id="login-usuario" onkeydown="if(event.key==='Enter')fazerLogin()" class="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-lg text-sm focus:border-pmesp-blue outline-none transition" placeholder="Digite seu usuário">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Senha</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fa-solid fa-lock text-slate-400"></i></div>
+              <input type="password" id="login-senha" onkeydown="if(event.key==='Enter')fazerLogin()" class="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-lg text-sm focus:border-pmesp-blue outline-none transition" placeholder="••••••••">
+            </div>
+          </div>
+          <div id="msg-erro" class="hidden bg-red-50 text-red-600 text-xs font-bold p-3 rounded border border-red-200 text-center">
+            Usuário sem permissão para esta área!
+          </div>
+          <button type="button" onclick="fazerLogin()" class="w-full bg-pmesp-blue text-white font-bold py-3 rounded-lg shadow-lg hover:bg-pmesp-darkblue transition hover:scale-[1.02]">
+            Entrar no Sistema
+          </button>
+        </div>
+
+  <!-- ================= SISTEMA PRINCIPAL ================= -->
+  <div id="tela-sistema" class="hidden flex-col min-h-screen">
+    
+    <!-- CABEÇALHO -->
+    <header class="bg-pmesp-blue text-white shadow-md border-b-4 border-pmesp-red sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center border border-white/20">
+            <i class="fa-solid fa-scale-balanced text-amber-400 text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-sm font-extrabold tracking-tight">SISTEMA OPERACIONAL 2º SGB</h1>
+            <span class="text-xs text-amber-400">Fechamento e Exportação (SIPA / Prefeitura)</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <div id="status-sync" class="bg-white/10 text-white px-3 py-1.5 rounded text-xs font-bold flex items-center gap-2">
+            <i class="fa-solid fa-cloud text-slate-300"></i> <span>Pronto</span>
+          </div>
+          <button onclick="carregarDadosNuvem(true)" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-2" title="Recarregar da Nuvem">
+            <i class="fa-solid fa-rotate"></i> Atualizar Nuvem
+          </button>
+          <button onclick="fazerLogout()" class="bg-red-600/80 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-2">
+            <i class="fa-solid fa-right-from-bracket"></i> Sair
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- NAVEGAÇÃO / ABAS -->
+    <nav class="bg-white border-b shadow-sm px-4 flex gap-2 overflow-x-auto z-30 sticky top-16">
+      <a href="index.html" class="py-3 px-4 border-b-4 border-transparent text-slate-500 font-bold text-sm hover:text-pmesp-blue whitespace-nowrap transition flex items-center gap-2 mr-4">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Gestor
+      </a>
+      <button onclick="mudarAbaPrincipal('reconciliacao')" id="btn-nav-reconciliacao" class="nav-btn py-3 px-4 border-b-4 border-pmesp-blue text-pmesp-blue font-bold text-sm whitespace-nowrap transition flex items-center gap-2">
+        <i class="fa-solid fa-list-check"></i> Reconciliação (Exceções)
+      </button>
+      <button onclick="mudarAbaPrincipal('sipa-militares')" id="btn-nav-sipa-militares" class="nav-btn py-3 px-4 border-b-4 border-transparent text-slate-500 font-bold text-sm hover:text-pmesp-blue whitespace-nowrap transition flex items-center gap-2">
+        <i class="fa-solid fa-file-invoice"></i> SIPA (Militares)
+      </button>
+      <button onclick="mudarAbaPrincipal('relatorio-municipais')" id="btn-nav-relatorio-municipais" class="nav-btn py-3 px-4 border-b-4 border-transparent text-slate-500 font-bold text-sm hover:text-pmesp-blue whitespace-nowrap transition flex items-center gap-2">
+        <i class="fa-solid fa-file-contract"></i> Relatório Prefeitura (BCP)
+      </button>
+      <button onclick="mudarAbaPrincipal('pesquisa-afastamentos')" id="btn-nav-pesquisa-afastamentos" class="nav-btn py-3 px-4 border-b-4 border-transparent text-slate-500 font-bold text-sm hover:text-pmesp-blue whitespace-nowrap transition flex items-center gap-2">
+        <i class="fa-solid fa-magnifying-glass"></i> Pesquisa de Afastamentos
+      </button>
+      <button onclick="mudarAbaPrincipal('exportar-planilhas')" id="btn-nav-exportar-planilhas" class="nav-btn py-3 px-4 border-b-4 border-transparent text-slate-500 font-bold text-sm hover:text-pmesp-blue whitespace-nowrap transition flex items-center gap-2">
+        <i class="fa-solid fa-file-export text-emerald-600"></i> Exportar Planilhas (SGB)
+      </button>
+    </nav>
+
+    <!-- CONTEÚDO PRINCIPAL (TODAS AS 5 ABAS DENTRO DO MAIN) -->
+    <main class="flex-1 w-full p-4 overflow-y-auto flex flex-col max-w-[1400px] mx-auto space-y-4">
+      
+      <!-- CONTROLES GLOBAIS -->
+      <div id="controles-globais" class="bg-white rounded-xl shadow border border-slate-200 p-4 flex flex-col md:flex-row gap-4 items-end justify-between">
+        <div class="flex flex-wrap gap-4 items-end">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Mês de Referência</label>
+            <input type="month" id="filtro-mes" onchange="renderDados()" class="border-2 border-slate-300 rounded-lg p-2 text-sm font-bold bg-white text-pmesp-blue outline-none focus:border-pmesp-blue w-48">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Estação / Pelotão</label>
+            <select id="filtro-estacao" onchange="renderDados()" class="border-2 border-slate-300 rounded-lg p-2 text-sm font-bold bg-white text-pmesp-blue outline-none focus:border-pmesp-blue w-48">
+              <option value="Todas">Todas as Estações</option>
+              <option value="Porto Feliz">Porto Feliz</option>
+              <option value="Salto">Salto</option>
+              <option value="Itu">Itu</option>
+              <option value="São Roque">São Roque</option>
+              <option value="Ibiúna">Ibiúna</option>
+            </select>
+          </div>
+        </div>
+        <div class="text-[11px] text-slate-500 font-semibold text-right" id="resumo-sincronizacao">
+          Aguardando dados...
+        </div>
+      </div>
+
+      <!-- ABA 1: RECONCILIAÇÃO (EXCEÇÕES) -->
+      <div id="aba-reconciliacao" class="aba-conteudo flex-1 flex flex-col min-h-[500px]">
+        <div class="bg-white rounded-xl shadow border border-slate-200 flex-1 overflow-hidden flex flex-col">
+          <div class="p-4 border-b bg-slate-50 flex flex-wrap justify-between items-center gap-2">
+            <div>
+              <h3 class="font-bold text-pmesp-blue">Painel de Exceções Lado-a-Lado (Projeção x Plantão)</h3>
+              <p class="text-xs text-slate-500">Exibe automaticamente afastamentos planejados e todas as faltas, folgas, trocas e extras lançados na aba Plantão.</p>
+            </div>
+            <div class="flex gap-3 items-center">
+              <button onclick="abrirModalAfastamentoLote('Todos')" class="bg-amber-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-amber-600 transition flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-calendar-plus"></i> Lançar Afastamento / Troca
+              </button>
+              <button onclick="salvarFechamentoMes()" class="bg-green-600 text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition flex items-center gap-2 shadow-md">
+                <i class="fa-solid fa-floppy-disk"></i> Salvar Fechamento (Decisão Final)
+              </button>
+            </div>
+          </div>
+          <div class="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
+            <table class="w-full text-left text-xs whitespace-nowrap border-collapse">
+              <thead class="bg-slate-100 text-slate-600 sticky top-0 z-10 shadow-sm border-b">
+                <tr>
+                  <th class="p-3 font-bold w-[60px] text-center border-r">Dia</th>
+                  <th class="p-3 font-bold w-[20%] border-r">Integrante</th>
+                  <th class="p-3 font-bold bg-blue-50 text-blue-900 border-r w-[20%]">Planejado (SIPA)</th>
+                  <th class="p-3 font-bold bg-amber-50 text-amber-900 border-r w-[25%]">Ocorrido (Plantão)</th>
+                  <th class="p-3 font-bold bg-green-50 text-green-900">Ajuste Final (Decisão)</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-reconciliacao" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 2: SIPA (MILITARES) -->
+      <div id="aba-sipa-militares" class="aba-conteudo hidden flex-1 flex-col min-h-[500px]">
+        <div class="bg-white rounded-xl shadow border border-slate-200 flex-1 overflow-hidden flex flex-col">
+          <div class="p-4 border-b bg-slate-50 flex flex-wrap justify-between items-center gap-2">
+            <div>
+              <h3 class="font-bold text-pmesp-blue">Projeção SIPA (Militares)</h3>
+              <p class="text-xs text-slate-500">Use as setas para ordenar os nomes (a posição é salva automaticamente). Gera 3 relatórios: Operacional, ADM e 1º Ten PM.</p>
+            </div>
+            <div class="flex gap-3 items-center">
+              <button onclick="abrirModalAfastamentoLote('Militares')" class="bg-amber-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-amber-600 transition flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-calendar-plus"></i> Lançar Afastamento / Troca (Militares)
+              </button>
+              <button onclick="gerarSipaMilitares()" class="bg-pmesp-blue text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-pmesp-darkblue transition flex items-center gap-2 shadow-md">
+                <i class="fa-solid fa-print"></i> Gerar e Imprimir SIPA
+              </button>
+            </div>
+          </div>
+          <div class="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
+            <table class="w-full text-left text-xs whitespace-nowrap border-collapse">
+              <thead id="thead-sipa-visual" class="bg-slate-100 text-slate-600 sticky top-0 z-10 shadow-sm border-b"></thead>
+              <tbody id="tbody-sipa-visual" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+          <div class="bg-slate-50 p-3 border-t text-[10px] text-slate-500 flex gap-4 font-bold flex-wrap">
+            <span><i class="fa-solid fa-square text-green-200 border border-green-400"></i> Verde</span>
+            <span><i class="fa-solid fa-square text-amber-200 border border-amber-400"></i> Amarela</span>
+            <span><i class="fa-solid fa-square text-blue-200 border border-blue-400"></i> Azul</span>
+            <span>3: 24h</span><span>2: 12-24h</span><span>1: 8-12h</span><span>0: &lt;8h</span>
+            <span>F: Férias</span><span>LP: Licença Prêmio</span><span>FS: Falta</span><span>A: Afastamentos/Folga/Troca</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 3: RELATÓRIO PREFEITURA (BCP) -->
+      <div id="aba-relatorio-municipais" class="aba-conteudo hidden flex-1 flex-col min-h-[500px]">
+        <div class="bg-white rounded-xl shadow border border-slate-200 flex-1 overflow-hidden flex flex-col">
+          <div class="p-4 border-b bg-slate-50 flex flex-wrap justify-between items-center gap-2">
+            <div>
+              <h3 class="font-bold text-pmesp-blue">Projeção Relatório (Municipais)</h3>
+              <p class="text-xs text-slate-500">Visualize a escala mensal das equipes de BCP e ajuste a ordem de apresentação do efetivo.</p>
+            </div>
+            <div class="flex gap-3 items-center">
+              <button onclick="abrirModalAfastamentoLote('Municipais')" class="bg-amber-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-amber-600 transition flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-calendar-plus"></i> Lançar Afastamento / Troca (Municipais)
+              </button>
+              <button onclick="imprimirEscalaBCP()" class="bg-slate-800 text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-slate-900 transition flex items-center gap-2 shadow-md">
+                <i class="fa-solid fa-print"></i> Gerar e Imprimir Relatório
+              </button>
+            </div>
+          </div>
+          <div class="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
+            <table class="w-full text-left text-xs whitespace-nowrap border-collapse">
+              <thead id="thead-bcp-visual" class="bg-slate-100 text-slate-600 sticky top-0 z-10 shadow-sm border-b"></thead>
+              <tbody id="tbody-bcp-visual" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+          <div class="bg-slate-50 p-3 border-t text-[10px] text-slate-500 flex gap-4 font-bold flex-wrap">
+            <span><i class="fa-solid fa-square text-blue-200 border border-blue-400"></i> Eq. A</span>
+            <span><i class="fa-solid fa-square text-green-200 border border-green-400"></i> Eq. B</span>
+            <span><i class="fa-solid fa-square text-orange-200 border border-orange-400"></i> Eq. C</span>
+            <span><i class="fa-solid fa-square text-pink-200 border border-pink-400"></i> Eq. D</span>
+            <span>D: Dia (07h30-19h30)</span><span>N: Noite (19h30-07h30)</span><span>F: Férias</span><span>LP: Licença Prêmio</span><span>FS: Falta</span><span>A: Afastamentos/Folga</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 4: PESQUISA E RELATÓRIO DE AFASTAMENTOS -->
+      <div id="aba-pesquisa-afastamentos" class="aba-conteudo hidden flex-1 flex-col min-h-[500px] space-y-4">
+        <div class="bg-white rounded-xl shadow border border-slate-200 p-4">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-3 mb-4 gap-3">
+            <div>
+              <h3 class="font-bold text-pmesp-blue text-base"><i class="fa-solid fa-magnifying-glass mr-1"></i> Filtro de Pesquisa de Efetivo, Afastamentos e Períodos</h3>
+              <p class="text-xs text-slate-500">Pesquise registros de militares e municipais por período, tipo de afastamento, trocas ou nome.</p>
+            </div>
+            <button onclick="imprimirRelatorioPesquisaAfastamentos()" class="bg-pmesp-blue text-white px-5 py-2.5 rounded-lg text-xs font-bold hover:bg-pmesp-darkblue transition flex items-center gap-2 shadow-md">
+              <i class="fa-solid fa-print"></i> Imprimir Relatório da Pesquisa
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Categoria</label>
+              <select id="pesq-categoria" onchange="popularSelectPesquisaEfetivo(); executarPesquisaAfastamentos();" class="w-full border-2 border-slate-300 rounded-lg p-2 text-xs font-bold bg-white text-slate-700 outline-none focus:border-pmesp-blue">
+                <option value="Todos">Todos (Militares + BCP)</option>
+                <option value="Militares">Apenas Militares</option>
+                <option value="Municipais">Apenas Municipais (BCP)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Integrante Específico</label>
+              <select id="pesq-integrante" onchange="executarPesquisaAfastamentos()" class="w-full border-2 border-slate-300 rounded-lg p-2 text-xs font-bold bg-white text-slate-700 outline-none focus:border-pmesp-blue">
+                <option value="Todos">-- Todos --</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Busca Rápida (Nome/RE)</label>
+              <input type="text" id="pesq-texto" oninput="executarPesquisaAfastamentos()" placeholder="Digite nome ou RE..." class="w-full border-2 border-slate-300 rounded-lg p-2 text-xs font-bold bg-white text-slate-700 outline-none focus:border-pmesp-blue">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Tipo de Registro</label>
+              <select id="pesq-tipo-afast" onchange="executarPesquisaAfastamentos()" class="w-full border-2 border-slate-300 rounded-lg p-2 text-xs font-bold bg-white text-slate-700 outline-none focus:border-pmesp-blue">
+                <option value="Todos">Todos os Afastamentos/Trocas</option>
+                <option value="F">F - Férias</option>
+                <option value="LP">LP - Licença Prêmio</option>
+                <option value="FS">FS - Falta ao Serviço</option>
+                <option value="A">A - Folga / Demais Afastamentos</option>
+                <option value="OBS">OBS - Troca de Serviço (BCP)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Data Início</label>
+              <input type="date" id="pesq-data-ini" onchange="executarPesquisaAfastamentos()" class="w-full border-2 border-slate-300 rounded-lg p-2 text-xs font-bold bg-white text-slate-700 outline-none focus:border-pmesp-blue">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Data Fim</label>
+              <input type="date" id="pesq-data-fim" onchange="executarPesquisaAfastamentos()" class="w-full border-2 border-slate-300 rounded-lg p-2 text-xs font-bold bg-white text-slate-700 outline-none focus:border-pmesp-blue">
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow border border-slate-200 flex-1 overflow-hidden flex flex-col">
+          <div class="p-3 bg-slate-50 border-b flex justify-between items-center">
+            <span class="text-xs font-bold text-slate-600" id="pesq-contador-resultados">Resultados encontrados: 0</span>
+            <button onclick="limparFiltrosPesquisa()" class="text-xs font-bold text-pmesp-blue hover:underline">Limpar Filtros</button>
+          </div>
+          <div class="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
+            <table class="w-full text-left text-xs whitespace-nowrap border-collapse">
+              <thead class="bg-slate-100 text-slate-600 sticky top-0 z-10 shadow-sm border-b">
+                <tr>
+                  <th class="p-3 font-bold border-r">Posto/Grad & Nome</th>
+                  <th class="p-3 font-bold border-r text-center">Vínculo</th>
+                  <th class="p-3 font-bold border-r text-center">Estação</th>
+                  <th class="p-3 font-bold border-r text-center">Tipo</th>
+                  <th class="p-3 font-bold border-r text-center">Período (Início a Fim)</th>
+                  <th class="p-3 font-bold border-r text-center">Qtd. Dias</th>
+                  <th class="p-3 font-bold">Observação / Motivo</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-pesquisa-afastamentos" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 5: EXPORTAÇÃO PARA AS 2 PLANILHAS MENSAIS DO SGB -->
+      <div id="aba-exportar-planilhas" class="aba-conteudo hidden flex-1 flex-col min-h-[500px] space-y-4">
+        <div class="bg-white rounded-xl shadow border border-slate-200 p-4 space-y-4">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-3 gap-3">
+            <div>
+              <h3 class="font-bold text-pmesp-blue text-base"><i class="fa-solid fa-file-spreadsheet mr-1 text-emerald-600"></i> Exportação Automática para Planilhas Mensais (2º SGB)</h3>
+              <p class="text-xs text-slate-500">Gera os dados diretamente do SIPA prontos para colar no Google Sheets da Administração (<kbd class="bg-slate-100 border px-1 rounded">Ctrl+Shift+V</kbd>).</p>
+            </div>
+            <div class="flex bg-slate-200 p-1 rounded-lg text-xs font-bold">
+              <button type="button" onclick="alternarModeloExportacao('temporario')" id="btn-mod-temporario" class="px-3 py-1.5 rounded bg-white text-pmesp-blue shadow-sm transition">
+                1. Efetivo Temporário / DEJEM (Mensal)
+              </button>
+              <button type="button" onclick="alternarModeloExportacao('quinzenal')" id="btn-mod-quinzenal" class="px-3 py-1.5 rounded text-slate-600 hover:text-slate-900 transition">
+                2. Escala Operacional (1ª / 2ª Quinzena)
+              </button>
+            </div>
+          </div>
+
+          <!-- CONTROLES DO MODELO 1: EFETIVO TEMPORÁRIO -->
+          <div id="painel-ctrl-temporario" class="flex flex-wrap items-center justify-between gap-3 bg-emerald-50/60 border border-emerald-200 p-3 rounded-lg">
+            <div class="flex flex-wrap items-center gap-4">
+              <div>
+                <label class="block text-[10px] font-bold text-emerald-900 uppercase mb-0.5">Meta Mínima por Turno</label>
+                <input type="number" id="exp-meta-bombeiros" value="6" min="1" max="20" onchange="renderExportacaoPlanilhas()" class="border border-emerald-400 rounded p-1.5 text-xs font-black text-center w-20 bg-white text-pmesp-blue">
+                <span class="text-[10px] text-emerald-800 font-semibold ml-1" id="lbl-info-meta">(Porto Feliz: 2 turnos de 6 | Ibiúna: 3)</span>
+              </div>
+              <label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer select-none mt-3 md:mt-0">
+                <input type="checkbox" id="chk-intercalar-linhas" checked class="w-4 h-4 accent-pmesp-blue rounded">
+                Intercalar linha em branco ao copiar (Padrão células mescladas da planilha SGB)
+              </label>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="copiarEfetivoTemporarioTSV('nomes')" class="bg-pmesp-blue hover:bg-pmesp-darkblue text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                <i class="fa-regular fa-copy"></i> Copiar Efetivo de Serviço (Cols. B–L)
+              </button>
+              <button type="button" onclick="copiarEfetivoTemporarioTSV('afastamentos')" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                <i class="fa-regular fa-calendar-xmark"></i> Copiar Férias + Folga Mensal
+              </button>
+              <button type="button" onclick="copiarEfetivoTemporarioTSV('completo')" class="bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-table"></i> Copiar Tabela Completa (+ Resumo)
+              </button>
+              <button type="button" onclick="baixarCSVEfetivoTemporario()" class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-download"></i> .CSV
+              </button>
+            </div>
+          </div>
+
+          <!-- CONTROLES DO MODELO 2: ESCALA QUINZENAL (703152102) -->
+          <div id="painel-ctrl-quinzenal" class="hidden flex-wrap items-center justify-between gap-3 bg-blue-50/60 border border-blue-200 p-3 rounded-lg">
+            <div class="flex items-center gap-3">
+              <label class="text-xs font-bold text-blue-900 uppercase">Quinzena:</label>
+              <select id="exp-quinzena" onchange="renderExportacaoPlanilhas()" class="border border-blue-400 rounded p-1.5 text-xs font-bold bg-white text-pmesp-blue">
+                <option value="1">1ª Quinzena (Dias 01 a 15)</option>
+                <option value="2">2ª Quinzena (Dias 16 a 31)</option>
+              </select>
+              <span class="text-[11px] text-slate-600">Você pode editar qualquer célula da tabela abaixo antes de copiar ou imprimir.</span>
+            </div>
+            <div class="flex gap-2">
+              <button type="button" onclick="copiarEscalaQuinzenalTSV()" class="bg-pmesp-blue hover:bg-pmesp-darkblue text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                <i class="fa-regular fa-copy"></i> Copiar Escala Quinzenal p/ Sheets (Ctrl+V)
+              </button>
+              <button type="button" onclick="imprimirEscalaQuinzenal()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-print"></i> Imprimir A4
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ÁREA DE RENDERIZAÇÃO DA PRÉVIA -->
+        <div class="bg-white rounded-xl shadow border border-slate-200 flex-1 overflow-hidden flex flex-col">
+          <div id="container-previa-exportacao" class="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar p-3"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- MODAL: ALERTA -->
+  <div id="modal-alerta" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 hidden">
+    <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full m-4 text-center border-t-4 border-amber-500">
+      <i class="fa-solid fa-circle-exclamation text-4xl text-amber-500 mb-4"></i>
+      <p id="texto-alerta" class="text-sm font-bold text-slate-700 mb-6"></p>
+      <button onclick="document.getElementById('modal-alerta').classList.add('hidden')" class="bg-pmesp-blue text-white px-6 py-2 rounded font-bold w-full hover:bg-pmesp-darkblue transition">Ciente</button>
+    </div>
+  </div>
+
+  <!-- MODAL: LANÇAR AFASTAMENTO / TROCA / MUDANÇA DE PRONTIDÃO -->
+  <div id="modal-afastamento" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 hidden">
+    <div class="bg-white w-full max-w-md rounded-xl shadow-2xl p-5 m-4">
+      <h3 class="font-bold text-lg text-pmesp-blue mb-4 border-b pb-2"><i class="fa-solid fa-calendar-plus"></i> Lançar Afastamento / Troca / Prontidão</h3>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1" id="lbl-afast-integrante-1">Selecione o Integrante</label>
+          <select id="afast-integrante" onchange="atualizarOpcoesTipoPorIntegrante()" class="w-full border rounded p-2 text-sm font-bold"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tipo de Lançamento / Afastamento</label>
+          <select id="afast-tipo" onchange="alternarCamposModalAfastamento()" class="w-full border rounded p-2 text-sm font-bold"></select>
+        </div>
+        <div id="box-segundo-integrante" class="hidden bg-indigo-50/70 p-3 rounded-lg border border-indigo-200 space-y-2">
+          <label class="block text-xs font-bold text-indigo-900 uppercase">2º Integrante (Substituto na Data da Troca)</label>
+          <select id="afast-integrante-2" class="w-full border border-indigo-300 rounded p-2 text-sm font-bold bg-white"></select>
+          <p class="text-[10px] text-indigo-700 leading-tight" id="hint-troca-servico">
+            Na <strong>Data da Troca</strong>: o 1º folga (A) e o 2º trabalha (3).<br>
+            Na <strong>Data da Reposição</strong>: o 1º trabalha (3) e o 2º folga (A).
+          </p>
+        </div>
+        <!-- NOVO: SELETOR DE PRONTIDÃO / EQUIPE TEMPORÁRIA -->
+        <div id="box-mudanca-prontidao" class="hidden bg-teal-50/80 p-3 rounded-lg border border-teal-300 space-y-2">
+          <label class="block text-xs font-bold text-teal-900 uppercase">Nova Prontidão / Equipe Temporária</label>
+          <select id="afast-nova-prontidao" class="w-full border border-teal-400 rounded p-2 text-sm font-bold bg-white text-pmesp-blue"></select>
+          <p class="text-[10px] text-teal-800 leading-tight">
+            O integrante seguirá a escala da nova prontidão/equipe apenas entre <strong>Data Início</strong> e <strong>Data Fim</strong>, retornando à original após o término.
+          </p>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Observação Complementar (Opcional)</label>
+          <input type="text" id="afast-obs" class="w-full border rounded p-2 text-sm" placeholder="Ex: Adequação de efetivo, Férias de terceiro...">
+        </div>
+        <div id="box-datas-padrao" class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Data Início</label>
+            <input type="date" id="afast-inicio" class="w-full border rounded p-2 text-sm font-bold">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Data Fim</label>
+            <input type="date" id="afast-fim" class="w-full border rounded p-2 text-sm font-bold">
+          </div>
+        </div>
+        <div id="box-datas-troca" class="hidden grid-cols-2 gap-3 bg-amber-50/70 p-3 rounded-lg border border-amber-200">
+          <div>
+            <label class="block text-xs font-bold text-amber-900 uppercase mb-1">Data da Troca</label>
+            <input type="date" id="troca-data-1" class="w-full border border-amber-300 rounded p-2 text-sm font-bold bg-white">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-amber-900 uppercase mb-1">Data da Reposição</label>
+            <input type="date" id="troca-data-2" class="w-full border border-amber-300 rounded p-2 text-sm font-bold bg-white">
+          </div>
+        </div>
+      </div>
+      <div class="mt-5 flex justify-end gap-2">
+        <button type="button" onclick="document.getElementById('modal-afastamento').classList.add('hidden')" class="px-4 py-2 border rounded text-sm font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
+        <button type="button" id="btn-salvar-modal-afast" onclick="processarAfastamentoLote()" class="px-4 py-2 bg-pmesp-blue text-white rounded text-sm font-bold hover:bg-pmesp-darkblue">Salvar Lançamento</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL POP-UP (TELA CHEIA): VISUALIZADOR DE DOCUMENTOS -->
+  <div id="modal-relatorios" class="fixed inset-0 z-[110] bg-slate-900/95 hidden flex-col w-screen h-screen transition-opacity">
+    <div class="h-16 shrink-0 bg-slate-800 px-4 md:px-6 flex justify-between items-center shadow-lg border-b border-slate-700 z-50">
+      <div class="flex gap-2 text-white font-bold items-center" id="titulo-modal-relatorio">
+          <i class="fa-solid fa-file-invoice text-xl"></i> &nbsp; Relatório Gerado (A4 Editável)
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="imprimirConteudo('doc-container')" class="bg-pmesp-blue hover:bg-pmesp-darkblue text-white font-bold py-2 px-4 rounded-lg shadow flex items-center gap-2 transition text-sm">
+          <i class="fa-solid fa-print"></i> Imprimir
+        </button>
+        <button onclick="document.getElementById('modal-relatorios').classList.add('hidden')" class="text-slate-400 hover:text-white font-bold text-sm transition flex items-center gap-2 ml-2">
+          <i class="fa-solid fa-xmark text-lg"></i> Fechar
+        </button>
+      </div>
+    </div>
+    <div class="h-[calc(100vh-4rem)] w-full overflow-y-auto overflow-x-hidden p-4 pb-32 flex flex-col items-center custom-scrollbar" id="doc-container"></div>
+  </div><script>
+    // ==========================================
+    // SISTEMA DE LOGIN E SESSÃO
+    // ==========================================
+   const usuarios = {
+      'gestor': { senha: 'Xdl33122@', nivel: 'gestor' },
+      'admin': { senha: 'admin193', nivel: 'admin' }
+    };
+    let sessaoMemoria = null;
+
+    function lerSessaoSegura() {
+      if (sessaoMemoria) return sessaoMemoria;
+      try { return localStorage.getItem('usuarioAtivo'); } catch (e) { return null; }
+    }
+
+    function verificarSessao() {
+      const nivel = lerSessaoSegura();
+      if (nivel === 'gestor' || nivel === 'admin') {
+        sessaoMemoria = nivel;
+        document.getElementById('tela-login').classList.add('hidden');
+        document.getElementById('tela-sistema').classList.remove('hidden');
+        document.getElementById('tela-sistema').classList.add('flex');
+
+        const hoje = new Date();
+        const mesAtualStr = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+        document.getElementById('filtro-mes').value = mesAtualStr;
+
+        const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
+        document.getElementById('pesq-data-ini').value = `${mesAtualStr}-01`;
+        document.getElementById('pesq-data-fim').value = `${mesAtualStr}-${String(ultimoDia).padStart(2, '0')}`;
+
+        carregarDadosNuvem(false);
+      } else {
+        document.getElementById('tela-login').classList.remove('hidden');
+        document.getElementById('tela-sistema').classList.add('hidden');
+        document.getElementById('tela-sistema').classList.remove('flex');
+      }
+    }
+
+    function fazerLogin() {
+      const user = (document.getElementById('login-usuario').value || '').trim().toLowerCase();
+      const pass = document.getElementById('login-senha').value || '';
+      const msgErro = document.getElementById('msg-erro');
+
+      if (usuarios[user] && usuarios[user].senha === pass) {
+        sessaoMemoria = usuarios[user].nivel;
+        try { localStorage.setItem('usuarioAtivo', usuarios[user].nivel); } catch (e) {}
+        msgErro.classList.add('hidden');
+        verificarSessao();
+      } else {
+        msgErro.classList.remove('hidden');
+        document.getElementById('login-senha').value = '';
+      }
+    }
+
+    function fazerLogout() {
+      sessaoMemoria = null;
+      try { localStorage.removeItem('usuarioAtivo'); } catch (e) {}
+      document.getElementById('login-usuario').value = '';
+      document.getElementById('login-senha').value = '';
+      verificarSessao();
+    }
+
+    window.addEventListener('DOMContentLoaded', verificarSessao);
+      
+    // ==========================================
+    // BANCO DE DADOS, FILA DE GRAVAÇÃO E NORMALIZAÇÃO
+    // ==========================================
+    const API_URL = "https://script.google.com/macros/s/AKfycbxyREqwxOntX2_rXCDMK6xyU-wYxlfk986zJjL6G2u_H39mOJN8EkRWomaqte37zQ2ydw/exec";
+    let appState = { efetivo: [], afastamentos: [], ocorrencias: [], fechamentoMes: [], ordemEfetivo: [] };
+    let diasDoMesAtual = 31;
+    let abaAtual = 'reconciliacao';
+    let resultadosPesquisaCache = [];
+    let ocorrenciasUnificadasCache = [];
+    let filaSyncPromise = Promise.resolve();
+    let syncEmAndamento = false;
+
+    function mostrarAlerta(mensagem) {
+      document.getElementById('texto-alerta').textContent = mensagem;
+      document.getElementById('modal-alerta').classList.remove('hidden');
+    }
+
+    function atualizarStatusVisualSync(estado, texto) {
+      const el = document.getElementById('status-sync');
+      if (!el) return;
+      if (estado === 'salvando') {
+        el.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-amber-400"></i> <span>${texto || 'Gravando na nuvem...'}</span>`;
+      } else if (estado === 'ok') {
+        el.innerHTML = `<i class="fa-solid fa-cloud-check text-green-400"></i> <span>${texto || 'Salvo na nuvem'}</span>`;
+      } else if (estado === 'erro') {
+        el.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-400"></i> <span>${texto || 'Salvo localmente (Erro nuvem)'}</span>`;
+      }
+    }
+
+    function obterChaveEfetivo(ef) {
+      if (!ef) return '';
+      return String(ef.id || ef.re || ef.nomeGuerra || '').trim();
+    }
+
+    function limparPontuacaoRE(str) {
+      return String(str || '').replace(/[.\-\/\s]/g, '').trim().toUpperCase();
+    }
+
+    function limparGraduacaoENome(str) {
+      if (!str) return '';
+      return String(str)
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toUpperCase()
+        .replace(/\b(1º|2º|3º|1°|2°|3°|1|2|3|SUBTEN|TEN|CAP|MAJ|SGT|CB|SD|PM|BCP|BCM|GCM|BM)\b/g, ' ')
+        .replace(/[^A-Z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function registroPertenceAoEfetivo(reg, ef) {
+      if (!reg || !ef) return false;
+      const idEf = String(ef.id || '').trim();
+      const reEfLimpo = limparPontuacaoRE(ef.re);
+      const guerraLimpo = limparGraduacaoENome(ef.nomeGuerra);
+      const nomeCompletoLimpo = limparGraduacaoENome(ef.nome);
+
+      const candidatosReg = [
+        reg.id, reg.militarId, reg.integranteId, reg.efetivoId, reg.re, reg.matricula
+      ].filter(v => v !== undefined && v !== null && String(v).trim() !== '' && String(v).trim() !== 'undefined').map(v => String(v).trim());
+
+      for (let c of candidatosReg) {
+        if (idEf && idEf !== 'undefined' && c === idEf) return true;
+        if (reEfLimpo && limparPontuacaoRE(c) === reEfLimpo) return true;
+        const cNomeLimpo = limparGraduacaoENome(c);
+        if (guerraLimpo && cNomeLimpo === guerraLimpo) return true;
+      }
+
+      const nomesReg = [reg.nomeGuerra, reg.militar, reg.integrante, reg.nome, reg.titular]
+        .filter(Boolean)
+        .map(v => limparGraduacaoENome(v));
+
+      for (let n of nomesReg) {
+        if (!n) continue;
+        if (guerraLimpo && (n === guerraLimpo || n.endsWith(' ' + guerraLimpo) || guerraLimpo.endsWith(' ' + n))) return true;
+        if (nomeCompletoLimpo && n === nomeCompletoLimpo) return true;
+      }
+      return false;
+    }
+
+    function normalizarDataIso(dataBruta) {
+      if (!dataBruta) return '';
+      let s = String(dataBruta).trim().split('T')[0];
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(s)) {
+        const [a, m, d] = s.split('-');
+        return `${a}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+      }
+      if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
+        const [d, m, a] = s.split('/');
+        return `${a}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+      }
+      return s;
+    }
+
+    function aplicarOrdemSalvaAoEfetivo() {
+      if (!Array.isArray(appState.efetivo) || appState.efetivo.length === 0) return;
+
+      let ordemLocal = [];
+      try {
+        ordemLocal = JSON.parse(localStorage.getItem('ordemEfetivo_2sgb') || '[]');
+      } catch (e) {}
+
+      const ordemAtiva = (Array.isArray(appState.ordemEfetivo) && appState.ordemEfetivo.length > 0)
+        ? appState.ordemEfetivo
+        : ordemLocal;
+
+      if (ordemAtiva.length > 0) {
+        const mapaPos = new Map();
+        ordemAtiva.forEach((chave, idx) => mapaPos.set(String(chave).trim(), idx));
+
+        appState.efetivo.sort((a, b) => {
+          const chA = obterChaveEfetivo(a);
+          const chB = obterChaveEfetivo(b);
+          const posA = mapaPos.has(chA) ? mapaPos.get(chA) : 99999;
+          const posB = mapaPos.has(chB) ? mapaPos.get(chB) : 99999;
+          return posA - posB;
+        });
+      }
+
+      appState.ordemEfetivo = appState.efetivo.map(ef => obterChaveEfetivo(ef));
+      localStorage.setItem('ordemEfetivo_2sgb', JSON.stringify(appState.ordemEfetivo));
+    }
+
+    function normalizarTipoOcorrenciaPlantao(valorBruto) {
+      const v = String(valorBruto || '').trim().toUpperCase();
+      if (v.includes('FALTA') || v === 'FS') return 'FALTA';
+      if (v.includes('TROCA') || v.includes('PERMUTA')) return 'TROCA';
+      if (v.includes('FOLGA') || v.includes('DISPENSA') || v.includes('AFASTAMENTO') || v === 'A') return 'FOLGA';
+      if (v.includes('EXTRA') || v.includes('DEJEM') || v.includes('ADEQUA') || v.includes('REFOR')) return 'EXTRA';
+      if (v.includes('FERIAS') || v.includes('FÉRIAS') || v === 'F') return 'F';
+      if (v.includes('LP') || v.includes('PRÊMIO') || v.includes('PREMIO')) return 'LP';
+      return v || 'ALTERAÇÃO';
+    }
+
+    function extrairTodasOcorrenciasDoPlantao() {
+      let listaUnificada = [];
+
+      const adicionarItem = (objBruto, dataPadrao) => {
+        if (!objBruto) return;
+        const dataIso = normalizarDataIso(objBruto.data || objBruto.dataPlantao || objBruto.dia || dataPadrao);
+        if (!dataIso) return;
+        const tipoRaw = objBruto.valor || objBruto.tipo || objBruto.natureza || objBruto.status || objBruto.situacao || objBruto.motivoTipo;
+        if (!tipoRaw) return;
+        const valorNorm = normalizarTipoOcorrenciaPlantao(tipoRaw);
+        const substituto = objBruto.substituto || objBruto.sub || objBruto.militarSubstituto || objBruto.por || '';
+        const obs = objBruto.obs || objBruto.observacao || objBruto.motivo || objBruto.descricao || '';
+
+        listaUnificada.push({
+          ...objBruto,
+          data: dataIso,
+          valor: valorNorm,
+          substituto: substituto,
+          obs: obs
+        });
+      };
+
+      if (Array.isArray(appState.ocorrencias)) {
+        appState.ocorrencias.forEach(o => adicionarItem(o, ''));
+      }
+
+      ['alteracoes', 'ocorrenciasPlantao', 'alteracoesPlantao', 'baixas', 'faltas', 'trocas'].forEach(chave => {
+        if (Array.isArray(appState[chave])) {
+          appState[chave].forEach(item => adicionarItem(item, ''));
+        }
+      });
+
+      ['plantoes', 'plantao', 'escalasDiarias', 'historicoPlantoes'].forEach(chave => {
+        const fonte = appState[chave];
+        if (Array.isArray(fonte)) {
+          fonte.forEach(pl => {
+            const dtPl = pl.data || pl.dataPlantao || pl.dia || '';
+            ['ocorrencias', 'alteracoes', 'excecoes', 'novidades', 'registros'].forEach(sub => {
+              if (Array.isArray(pl[sub])) {
+                pl[sub].forEach(reg => adicionarItem(reg, dtPl));
+              }
+            });
+            if ((pl.id || pl.re || pl.militar || pl.nomeGuerra) && (pl.valor || pl.tipo || pl.situacao)) {
+              adicionarItem(pl, dtPl);
+            }
+          });
+        } else if (fonte && typeof fonte === 'object') {
+          Object.keys(fonte).forEach(kData => {
+            const pl = fonte[kData];
+            const dtPl = /^\d{4}-\d{2}-\d{2}$/.test(kData) ? kData : (pl?.data || '');
+            if (Array.isArray(pl)) {
+              pl.forEach(reg => adicionarItem(reg, dtPl));
+            } else if (pl && typeof pl === 'object') {
+              ['ocorrencias', 'alteracoes', 'excecoes', 'novidades', 'efetivo'].forEach(sub => {
+                if (Array.isArray(pl[sub])) {
+                  pl[sub].forEach(reg => {
+                    if (reg.valor || reg.tipo || reg.situacao || reg.status) {
+                      adicionarItem(reg, dtPl);
+                    }
+                  });
+                }
+              });
+            }
+          });
+        }
+      });
+
+      if (Array.isArray(appState.plantoes)) {
+        appState.plantoes.forEach(pl => {
+          if (!pl || !pl.id || !pl.htmlEscala) return;
+          const partesId = String(pl.id).split('_');
+          const dataPl = normalizarDataIso(partesId[0]);
+          const estacaoPl = partesId.slice(1).join('_') || '';
+
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = pl.htmlEscala;
+          const elNomes = tempDiv.querySelector('#out-escala-nomes-ausentes');
+          const elMotivos = tempDiv.querySelector('#out-escala-motivo-ausentes');
+
+          if (elNomes && elMotivos) {
+            const nomesArr = elNomes.innerHTML.split(/<br\s*\/?>/i).map(s => s.replace(/<[^>]+>/g, '').trim()).filter(Boolean);
+            const motivosArr = elMotivos.innerHTML.split(/<br\s*\/?>/i).map(s => s.replace(/<[^>]+>/g, '').trim()).filter(Boolean);
+
+            nomesArr.forEach((linhaNome, idx) => {
+              const motivoTxt = (motivosArr[idx] || 'ALTERAÇÃO NO PLANTÃO').trim();
+              const partesNomes = linhaNome.split('/').map(s => s.trim()).filter(Boolean);
+              const titularNome = partesNomes[0] || '';
+              const substNome = partesNomes[1] || '';
+
+              if (titularNome) {
+                adicionarItem({
+                  nome: titularNome,
+                  nomeGuerra: titularNome,
+                  estacao: estacaoPl,
+                  data: dataPl,
+                  valor: motivoTxt,
+                  substituto: substNome,
+                  obs: motivoTxt
+                }, dataPl);
+              }
+
+              if (substNome) {
+                adicionarItem({
+                  nome: substNome,
+                  nomeGuerra: substNome,
+                  estacao: estacaoPl,
+                  data: dataPl,
+                  valor: 'EXTRA',
+                  substituto: '',
+                  obs: `ASSUMIU TROCA NO LUGAR DE ${titularNome} (${motivoTxt})`
+                }, dataPl);
+              }
+            });
+          }
+        });
+      }
+
+      return listaUnificada;
+    }
+
+    async function carregarDadosNuvem(forcarNuvem = false) {
+      if (syncEmAndamento && !forcarNuvem) return;
+      atualizarStatusVisualSync('salvando', 'Carregando...');
+
+      try {
+        const resposta = await fetch(API_URL + '?t=' + Date.now());
+        const resultado = await resposta.json();
+        if (resultado.sucesso && resultado.dados) {
+          const nuvem = resultado.dados;
+
+          const cacheLocalStr = localStorage.getItem('backup_appState_2sgb');
+          const tsLocal = parseInt(localStorage.getItem('backup_ts_2sgb') || '0', 10);
+          const agora = Date.now();
+
+          appState = nuvem;
+          if (!Array.isArray(appState.efetivo)) appState.efetivo = [];
+          if (!Array.isArray(appState.afastamentos)) appState.afastamentos = [];
+          if (!Array.isArray(appState.ocorrencias)) appState.ocorrencias = [];
+          if (!Array.isArray(appState.fechamentoMes)) appState.fechamentoMes = [];
+
+          appState.afastamentos.forEach(a => { a.data = normalizarDataIso(a.data); });
+
+          if (!forcarNuvem && cacheLocalStr && (agora - tsLocal < 45000)) {
+            try {
+              const cacheLocal = JSON.parse(cacheLocalStr);
+              if (Array.isArray(cacheLocal.afastamentos)) {
+                cacheLocal.afastamentos.forEach(afLocal => {
+                  const existe = appState.afastamentos.some(a => a.id === afLocal.id && a.data === afLocal.data);
+                  if (!existe) appState.afastamentos.push(afLocal);
+                });
+              }
+            } catch (e) {}
+          }
+
+          aplicarOrdemSalvaAoEfetivo();
+          ocorrenciasUnificadasCache = extrairTodasOcorrenciasDoPlantao();
+
+          const qtdPlantoesSalvos = Array.isArray(appState.plantoes) ? appState.plantoes.length : 0;
+          document.getElementById('resumo-sincronizacao').textContent = 
+            `Efetivo: ${appState.efetivo.length} | Planejados: ${appState.afastamentos.length} | Plantões Salvos: ${qtdPlantoesSalvos} | Ocorrências Lidas: ${ocorrenciasUnificadasCache.length}`;
+
+          popularSelectPesquisaEfetivo();
+          renderDados();
+          atualizarStatusVisualSync('ok', 'Sincronizado');
+        }
+      } catch (erro) {
+        console.error("Erro ao carregar da nuvem:", erro);
+        atualizarStatusVisualSync('erro', 'Modo Offline');
+        mostrarAlerta("Erro ao conectar com a nuvem. Usando dados em cache.");
+      }
+    }
+
+   function sincronizarComNuvem(silencioso = false) {
+      appState.ordemEfetivo = (appState.efetivo || []).map(ef => obterChaveEfetivo(ef));
+      try {
+        localStorage.setItem('ordemEfetivo_2sgb', JSON.stringify(appState.ordemEfetivo));
+        localStorage.setItem('backup_appState_2sgb', JSON.stringify({
+          afastamentos: appState.afastamentos,
+          fechamentoMes: appState.fechamentoMes,
+          mudancasProntidao: appState.mudancasProntidao || [],
+          ordemEfetivo: appState.ordemEfetivo
+        }));
+        localStorage.setItem('backup_ts_2sgb', String(Date.now()));
+      } catch (e) {}
+
+      atualizarStatusVisualSync('salvando', 'Gravando na nuvem...');
+      syncEmAndamento = true;
+
+      filaSyncPromise = filaSyncPromise.then(async () => {
+        try {
+          try {
+            const rGet = await fetch(API_URL + '?t=' + Date.now());
+            const jGet = await rGet.json();
+            if (jGet.sucesso && jGet.dados) {
+              ['ocorrencias','plantoes','patrimonio','frota','avisos','favoritos','agenda','calendarUrl'].forEach(ch => {
+                if (jGet.dados[ch] !== undefined) appState[ch] = jGet.dados[ch];
+              });
+            }
+          } catch (e) {}
+
+          const resp = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ dados: appState, usuario: "Escalas", estacao: "Geral" })
+          });
+          const resJson = await resp.json();
+          if (!resJson.sucesso) throw new Error(resJson.erro || "Falha ao gravar na planilha");
+
+          ocorrenciasUnificadasCache = extrairTodasOcorrenciasDoPlantao();
+          atualizarStatusVisualSync('ok', 'Salvo na nuvem!');
+          if (!silencioso) mostrarAlerta("Dados gravados na nuvem com sucesso!");
+        } catch (erro) {
+          console.error("Falha ao sincronizar:", erro);
+          atualizarStatusVisualSync('erro', 'Erro ao gravar na nuvem');
+          mostrarAlerta("Atenção: erro ao salvar na planilha (" + erro.message + "). Verifique se o Apps Script foi publicado como Nova Versão.");
+        } finally {
+          syncEmAndamento = false;
+        }
+      });
+      return filaSyncPromise;
+    }
+      
+    function mudarAbaPrincipal(abaId) {
+      abaAtual = abaId;
+      document.querySelectorAll('.aba-conteudo').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('border-pmesp-blue', 'text-pmesp-blue');
+        btn.classList.add('border-transparent', 'text-slate-500');
+      });
+
+      document.getElementById(`aba-${abaId}`).classList.remove('hidden');
+      document.getElementById(`btn-nav-${abaId}`).classList.remove('border-transparent', 'text-slate-500');
+      document.getElementById(`btn-nav-${abaId}`).classList.add('border-pmesp-blue', 'text-pmesp-blue');
+
+      renderDados();
+    }
+
+    function renderDados() {
+      ocorrenciasUnificadasCache = extrairTodasOcorrenciasDoPlantao();
+      if (abaAtual === 'reconciliacao') renderReconciliacao();
+      else if (abaAtual === 'sipa-militares') renderEscalaVisual('Militares');
+      else if (abaAtual === 'relatorio-municipais') renderEscalaVisual('Municipais');
+      else if (abaAtual === 'pesquisa-afastamentos') {
+        popularSelectPesquisaEfetivo();
+        executarPesquisaAfastamentos();
+      } else if (abaAtual === 'exportar-planilhas') {
+        ajustarMetaAutomaticaPorEstacao();
+        renderExportacaoPlanilhas();
+      }
+    }
+
+    function getEquipesBcmDoDia(diaDoMes) {
+      const resto = diaDoMes % 4;
+      switch (resto) {
+        case 1: return { dia: 'Equipe C', noite: 'Equipe A' };
+        case 2: return { dia: 'Equipe D', noite: 'Equipe C' };
+        case 3: return { dia: 'Equipe B', noite: 'Equipe D' };
+        case 0: return { dia: 'Equipe A', noite: 'Equipe B' };
+        default: return { dia: null, noite: null };
+      }
+    }
+
+    function getCorEquipe(equipe) {
+      if(equipe === 'Equipe A') return 'bg-blue-100 text-blue-800 font-bold border-blue-300';
+      if(equipe === 'Equipe B') return 'bg-green-100 text-green-800 font-bold border-green-300';
+      if(equipe === 'Equipe C') return 'bg-orange-100 text-orange-800 font-bold border-orange-300';
+      if(equipe === 'Equipe D') return 'bg-pink-100 text-pink-800 font-bold border-pink-300';
+      return 'bg-slate-200 text-slate-800';
+    }
+
+    window.moverIntegrante = function(id, direcao) {
+      let efetivoFiltro = (appState.efetivo || []).filter(e => {
+        if (abaAtual === 'sipa-militares') return e.tipo === 'Militar';
+        return e.tipo === 'BCP' || e.tipo === 'BCM';
+      });
+      const estacao = document.getElementById('filtro-estacao').value;
+      if (estacao !== "Todas") efetivoFiltro = efetivoFiltro.filter(e => (e.estacao||'').toUpperCase() === estacao.toUpperCase());
+
+      let idxVisual = efetivoFiltro.findIndex(e => obterChaveEfetivo(e) === String(id).trim());
+      if (idxVisual < 0) return;
+
+      if (direcao === 'up' && idxVisual > 0) {
+        let idDeCima = obterChaveEfetivo(efetivoFiltro[idxVisual - 1]);
+        swapInAppState(id, idDeCima);
+      } else if (direcao === 'down' && idxVisual < efetivoFiltro.length - 1) {
+        let idDeBaixo = obterChaveEfetivo(efetivoFiltro[idxVisual + 1]);
+        swapInAppState(idDeBaixo, id); 
+      }
+    };
+
+    function swapInAppState(idSobe, idDesce) {
+      let idxSobe = appState.efetivo.findIndex(e => obterChaveEfetivo(e) === String(idSobe).trim());
+      let idxDesce = appState.efetivo.findIndex(e => obterChaveEfetivo(e) === String(idDesce).trim());
+      if (idxSobe > -1 && idxDesce > -1) {
+        let temp = appState.efetivo[idxSobe];
+        appState.efetivo[idxSobe] = appState.efetivo[idxDesce];
+        appState.efetivo[idxDesce] = temp;
+        renderDados();
+        sincronizarComNuvem(true);
+      }
+    }
+    
+    function obterProntidaoEfetivaNoDia(ef, dataStr) {
+      if (Array.isArray(appState.mudancasProntidao)) {
+        const reg = appState.mudancasProntidao.find(m =>
+          dataStr >= m.inicio && dataStr <= m.fim && registroPertenceAoEfetivo(m, ef)
+        );
+        if (reg && reg.novaProntidao) return reg.novaProntidao;
+      }
+      return ef.prontidao || '';
+    }
+
+    function calcularEscalaPadrao(ef, ano, mes, dia) {
+      let dataAtual = new Date(ano, mes - 1, dia);
+      let dataStr = `${ano}-${String(mes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+      let diaSemana = dataAtual.getDay();
+      let isFimSemana = (diaSemana === 0 || diaSemana === 6);
+      const prontAtiva = obterProntidaoEfetivaNoDia(ef, dataStr);
+
+      if (ef.tipo === 'Militar') {
+        if (prontAtiva === 'Expediente' || prontAtiva === 'Administrativo') {
+          if (!isFimSemana) return { sigla: '1', desc: 'Expediente (8h-12h)' };
+          return { sigla: '0', desc: 'Fim de Semana' };
+        } else {
+          const dataRef = new Date(2026, 10, 6);
+          const diff = Math.floor((dataAtual - dataRef) / (1000*60*60*24));
+          let ciclo = diff % 3; if (ciclo < 0) ciclo += 3;
+          const cicloNomes = ['Verde', 'Amarela', 'Azul'];
+          if (prontAtiva.toUpperCase() === cicloNomes[ciclo].toUpperCase()) return { sigla: '3', desc: 'Serviço (24h)' };
+          return { sigla: '0', desc: 'Descanso (48h)' };
+        }
+      } else {
+        const equipes = getEquipesBcmDoDia(dia);
+        if (prontAtiva.includes(equipes.dia)) return { sigla: 'D', desc: 'Serviço Dia (12h)' };
+        if (prontAtiva.includes(equipes.noite)) return { sigla: 'N', desc: 'Serviço Noite (12h)' };
+        return { sigla: '0', desc: 'Descanso' };
+      }
+    }
+
+    function buscarPlanejadoDia(ef, dataStr) {
+      return (appState.afastamentos || []).find(a => a.data === dataStr && registroPertenceAoEfetivo(a, ef));
+    }
+
+    function buscarOcorridoPlantaoDia(ef, dataStr) {
+      const candidatos = (ocorrenciasUnificadasCache || []).filter(o => o.data === dataStr && registroPertenceAoEfetivo(o, ef));
+      if (candidatos.length === 0) return undefined;
+      return candidatos[candidatos.length - 1];
+    }
+
+    function buscarFechamentoDia(ef, dataStr) {
+      return (appState.fechamentoMes || []).find(f => f.data === dataStr && registroPertenceAoEfetivo(f, ef));
+    }
+
+    function renderReconciliacao() {
+      const mesValor = document.getElementById('filtro-mes').value;
+      const estacao = document.getElementById('filtro-estacao').value;
+      const tbody = document.getElementById('tbody-reconciliacao');
+      tbody.innerHTML = '';
+
+      if (!mesValor) return;
+      const [anoStr, mesStr] = mesValor.split('-');
+      const ano = parseInt(anoStr);
+      const mes = parseInt(mesStr);
+      const diasDoMes = new Date(ano, mes, 0).getDate();
+      diasDoMesAtual = diasDoMes;
+
+      let efetivoFiltro = [...(appState.efetivo || [])];
+      if (estacao !== "Todas") {
+        efetivoFiltro = efetivoFiltro.filter(e => (e.estacao||'').toUpperCase() === estacao.toUpperCase());
+      }
+      
+      const mapaEf = new Map();
+      efetivoFiltro.forEach(ef => {
+          let ch = obterChaveEfetivo(ef);
+          if(ch && !mapaEf.has(ch)) mapaEf.set(ch, ef);
+      });
+      let efetivoUnico = Array.from(mapaEf.values());
+
+      let htmlRows = '';
+      let qtdeExcecoes = 0;
+
+      efetivoUnico.forEach(ef => {
+        let chId = obterChaveEfetivo(ef);
+        let isMilitar = (ef.tipo === 'Militar');
+
+        for (let i = 1; i <= diasDoMes; i++) {
+          let dataStr = `${ano}-${mesStr}-${String(i).padStart(2, '0')}`;
+          let dataAtual = new Date(ano, mes - 1, i);
+          let isFds = (dataAtual.getDay() === 0 || dataAtual.getDay() === 6);
+          let diaNome = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][dataAtual.getDay()];
+
+          let padrao = calcularEscalaPadrao(ef, ano, mes, i);
+          let planejado = buscarPlanejadoDia(ef, dataStr);
+          let ocorrido = buscarOcorridoPlantaoDia(ef, dataStr);
+          
+          let valPlanejado = planejado ? (planejado.valor === 'OBS' ? padrao.sigla : planejado.valor) : padrao.sigla;
+          let valOcorrido = valPlanejado;
+          
+          if (ocorrido) {
+             if (ocorrido.valor === 'FALTA') valOcorrido = 'FS';
+             else if (ocorrido.valor === 'FOLGA' || ocorrido.valor === 'TROCA') valOcorrido = 'A';
+             else if (ocorrido.valor === 'EXTRA') valOcorrido = (isMilitar ? '3' : 'D');
+             else if (['F', 'LP', 'FS', 'A', '3', '2', '1', '0', 'D', 'N'].includes(ocorrido.valor)) valOcorrido = ocorrido.valor;
+          }
+
+          if (valPlanejado !== padrao.sigla || planejado || ocorrido) {
+             qtdeExcecoes++;
+
+             let htmlPlanejado = `<span class="text-slate-400 text-[10px]">Padrão: ${padrao.sigla}</span>`;
+             if (planejado) {
+                let cPlan = 'bg-blue-100 text-blue-800';
+                if (['F', 'LP'].includes(planejado.valor)) cPlan = 'bg-orange-100 text-orange-800';
+                if (['FS', 'A'].includes(planejado.valor)) cPlan = 'bg-red-100 text-red-800';
+                if (planejado.valor === 'OBS') cPlan = 'bg-purple-100 text-purple-800';
+                let rotuloPlan = planejado.valor === 'OBS' ? 'TROCA (OBS)' : planejado.valor;
+                htmlPlanejado = `<span class="px-2 py-0.5 rounded text-[10px] font-bold ${cPlan} mr-1">${rotuloPlan}</span><span class="text-[9px] text-slate-500">${planejado.obs||''}</span>`;
+             }
+
+             let htmlOcorrido = `<span class="text-slate-400 text-[10px]">-</span>`;
+             let divergencia = false;
+
+             if (ocorrido) {
+                 let cOco = 'bg-amber-100 text-amber-800';
+                 if (ocorrido.valor === 'FALTA' || ocorrido.valor === 'FS') cOco = 'bg-red-100 text-red-800';
+                 if (ocorrido.valor === 'FOLGA' || ocorrido.valor === 'A') cOco = 'bg-green-100 text-green-800';
+                 if (ocorrido.valor === 'TROCA') cOco = 'bg-purple-100 text-purple-800';
+                 if (ocorrido.valor === 'EXTRA') cOco = 'bg-indigo-100 text-indigo-800';
+                 
+                 let textoSub = ocorrido.substituto ? `Por: ${ocorrido.substituto} ` : '';
+                 htmlOcorrido = `<span class="px-2 py-0.5 rounded text-[10px] font-bold ${cOco} mr-1">${ocorrido.valor}</span><span class="text-[9px] text-slate-600 font-semibold">${textoSub}${ocorrido.obs||''}</span>`;
+                 if (valOcorrido !== valPlanejado) divergencia = true;
+             }
+
+             let fechamento = buscarFechamentoDia(ef, dataStr);
+             let valFinal = fechamento ? fechamento.valor : (planejado && planejado.valor === 'OBS' ? 'OBS' : valOcorrido);
+             let obsPadraoOcorrido = ocorrido ? `${ocorrido.substituto ? 'Subst.: ' + ocorrido.substituto + ' ' : ''}${ocorrido.obs || ''}`.trim() : '';
+             let obsFinal = fechamento ? fechamento.obs : (obsPadraoOcorrido || (planejado ? (planejado.obs || '') : ''));
+             
+             let bgLinha = (divergencia && !fechamento) ? 'bg-red-50/50' : 'hover:bg-slate-50';
+
+             let opcoesSelect = isMilitar ? `
+               <option value="3" ${valFinal === '3' ? 'selected' : ''}>3</option>
+               <option value="2" ${valFinal === '2' ? 'selected' : ''}>2</option>
+               <option value="1" ${valFinal === '1' ? 'selected' : ''}>1</option>
+               <option value="0" ${valFinal === '0' ? 'selected' : ''}>0</option>
+               <option value="F" ${valFinal === 'F' ? 'selected' : ''}>F</option>
+               <option value="LP" ${valFinal === 'LP' ? 'selected' : ''}>LP</option>
+               <option value="FS" ${valFinal === 'FS' ? 'selected' : ''}>FS</option>
+               <option value="A" ${valFinal === 'A' ? 'selected' : ''}>A</option>
+             ` : `
+               <option value="OBS" ${valFinal === 'OBS' ? 'selected' : ''}>OBS</option>
+               <option value="F" ${valFinal === 'F' ? 'selected' : ''}>F</option>
+               <option value="LP" ${valFinal === 'LP' ? 'selected' : ''}>LP</option>
+               <option value="FS" ${valFinal === 'FS' ? 'selected' : ''}>FS</option>
+               <option value="A" ${valFinal === 'A' ? 'selected' : ''}>A</option>
+               <option value="D" ${valFinal === 'D' ? 'selected' : ''}>D</option>
+               <option value="N" ${valFinal === 'N' ? 'selected' : ''}>N</option>
+             `;
+
+             htmlRows += `
+               <tr class="border-b transition ${bgLinha} exc-row">
+                 <td class="p-3 border-r text-center ${isFds ? 'text-red-500 bg-red-50/30 font-bold' : 'text-slate-600'}">
+                   <span class="block text-sm">${String(i).padStart(2,'0')}/${mesStr}</span>
+                   <span class="block text-[8px] uppercase">${diaNome}</span>
+                 </td>
+                 <td class="p-3 border-r">
+                   <span class="font-bold text-slate-700 block">${ef.graduacao} ${ef.nomeGuerra}</span>
+                   <span class="text-[9px] text-slate-400 block">${ef.tipo} | ${ef.prontidao}</span>
+                 </td>
+                 <td class="p-3 border-r bg-blue-50/30 max-w-[200px] truncate" title="${planejado?.obs||''}">${htmlPlanejado}</td>
+                 <td class="p-3 border-r bg-amber-50/30 max-w-[220px] truncate ${divergencia && !fechamento ? 'border-l-4 border-l-red-500' : ''}" title="${obsPadraoOcorrido}">${htmlOcorrido}</td>
+                 <td class="p-2 bg-green-50/30 flex gap-2 items-center">
+                    <input type="hidden" class="exc-id" value="${chId}">
+                    <input type="hidden" class="exc-data" value="${dataStr}">
+                    <select class="exc-val border border-green-300 rounded p-1.5 text-xs font-bold text-green-900 bg-white w-16 text-center focus:border-green-600 outline-none">
+                      ${opcoesSelect}
+                    </select>
+                    <input type="text" class="exc-obs border border-green-200 rounded p-1.5 text-[10px] w-full bg-white focus:border-green-500 outline-none" value="${obsFinal}" placeholder="Motivo...">
+                 </td>
+               </tr>
+             `;
+          }
+        }
+      });
+
+      tbody.innerHTML = qtdeExcecoes === 0
+        ? `<tr><td colspan="5" class="text-center p-10 text-slate-400 font-bold">Nenhuma divergência, falta, folga ou troca neste mês nesta estação!</td></tr>`
+        : htmlRows;
+    }
+
+    async function salvarFechamentoMes() {
+      const mesValor = document.getElementById('filtro-mes').value;
+      if (!mesValor) return;
+
+      document.querySelectorAll('.exc-row').forEach(tr => {
+         let id = tr.querySelector('.exc-id').value;
+         let data = tr.querySelector('.exc-data').value;
+         let val = tr.querySelector('.exc-val').value;
+         let obs = tr.querySelector('.exc-obs').value.trim();
+         
+         let idx = appState.fechamentoMes.findIndex(f => f.id === id && f.data === data);
+         if (idx > -1) {
+            appState.fechamentoMes[idx].valor = val;
+            appState.fechamentoMes[idx].obs = obs;
+         } else {
+            appState.fechamentoMes.push({ id: id, data: data, valor: val, obs: obs });
+         }
+      });
+
+      await sincronizarComNuvem(false);
+      renderReconciliacao();
+    }
+
+    function renderEscalaVisual(tipo) {
+      const mesValor = document.getElementById('filtro-mes').value;
+      const estacao = document.getElementById('filtro-estacao').value;
+      const isMilitares = (tipo === 'Militares');
+      const thead = document.getElementById(isMilitares ? 'thead-sipa-visual' : 'thead-bcp-visual');
+      const tbody = document.getElementById(isMilitares ? 'tbody-sipa-visual' : 'tbody-bcp-visual');
+
+      if (!mesValor || !thead || !tbody) return;
+      const [anoStr, mesStr] = mesValor.split('-');
+      const ano = parseInt(anoStr);
+      const mes = parseInt(mesStr);
+      const diasNoMes = new Date(ano, mes, 0).getDate();
+      diasDoMesAtual = diasNoMes;
+
+      let trHead1 = `<tr><th rowspan="${isMilitares ? 1 : 2}" class="p-3 font-bold text-center sticky left-0 bg-slate-200 z-20 min-w-[200px]">Integrante</th>`;
+      let trHead2 = isMilitares ? `` : `<tr>`;
+
+      for(let i=1; i<=diasNoMes; i++) {
+        let d = new Date(ano, mes-1, i).getDay();
+        let isFds = (d === 0 || d === 6);
+        if (!isMilitares) {
+          trHead1 += `<th colspan="2" class="p-1 border-r font-bold text-center ${isFds ? 'text-red-500 bg-red-50' : ''}">${i}</th>`;
+          trHead2 += `<th class="p-1 border-r text-[9px] text-center ${isFds ? 'bg-red-50' : 'bg-slate-50'}">D</th><th class="p-1 border-r text-[9px] text-center ${isFds ? 'bg-red-50' : 'bg-slate-50'}">N</th>`;
+        } else {
+          trHead1 += `<th class="p-2 border-r font-bold text-center ${isFds ? 'text-red-500 bg-red-50' : ''}">${i}</th>`;
+        }
+      }
+      trHead1 += `</tr>`;
+      thead.innerHTML = isMilitares ? trHead1 : (trHead1 + trHead2 + `</tr>`);
+
+      let efetivo = (appState.efetivo || []).filter(e => isMilitares ? e.tipo === 'Militar' : (e.tipo === 'BCP' || e.tipo === 'BCM'));
+      if (estacao !== "Todas") efetivo = efetivo.filter(e => (e.estacao||'').toUpperCase() === estacao.toUpperCase());
+      
+      tbody.innerHTML = '';
+      if(efetivo.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${diasNoMes+1}" class="text-center p-10 text-slate-400 font-bold">Nenhum integrante encontrado.</td></tr>`;
+        return;
+      }
+
+      efetivo.forEach(ef => {
+        let tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 border-b";
+        let chaveEf = obterChaveEfetivo(ef);
+
+        let htmlNome = `
+          <div class="flex items-center justify-between">
+            <div>${ef.graduacao} ${ef.nomeGuerra} <span class="text-[9px] text-slate-400">(${ef.estacao})</span></div>
+            <div class="flex flex-col gap-0.5 ml-2">
+              <button type="button" onclick="moverIntegrante('${chaveEf}', 'up')" class="text-[8px] bg-slate-100 border text-slate-500 hover:text-pmesp-blue hover:bg-slate-200 rounded px-1"><i class="fa-solid fa-chevron-up"></i></button>
+              <button type="button" onclick="moverIntegrante('${chaveEf}', 'down')" class="text-[8px] bg-slate-100 border text-slate-500 hover:text-pmesp-blue hover:bg-slate-200 rounded px-1"><i class="fa-solid fa-chevron-down"></i></button>
+            </div>
+          </div>
+        `;
+        let rowHtml = `<td class="p-2 border-r font-bold text-slate-700 sticky left-0 bg-white z-10 whitespace-nowrap shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">${htmlNome}</td>`;
+
+        for(let i=1; i<=diasNoMes; i++) {
+            let dataAtual = new Date(ano, mes-1, i);
+            let diaSemana = dataAtual.getDay();
+            let isFds = (diaSemana === 0 || diaSemana === 6);
+            let dataStr = `${ano}-${mesStr}-${String(i).padStart(2, '0')}`;
+            
+            if (isMilitares) {
+                let sigla = 'A';
+                let cor = isFds ? 'bg-weekend text-slate-300' : 'text-slate-300';
+
+                if (obterProntidaoEfetivaNoDia(ef, dataStr) === 'Expediente' || obterProntidaoEfetivaNoDia(ef, dataStr) === 'Administrativo' || ehGraduacaoTenente(ef.graduacao)) {
+                    if (!isFds) { sigla = '1'; cor = 'text-slate-800 font-bold bg-slate-100 border-slate-300'; }
+                    else { sigla = '0'; }
+                } else {
+                    const diff = Math.floor((dataAtual - new Date(2026, 10, 6)) / (1000*60*60*24));
+                    let ciclo = diff % 3; if (ciclo < 0) ciclo += 3;
+                    let diaPront = ['Verde', 'Amarela', 'Azul'][ciclo];
+                    
+                    if ((obterProntidaoEfetivaNoDia(ef, dataStr) || '').toUpperCase() === diaPront.toUpperCase()) {
+                      sigla = '3';
+                      if (diaPront === 'Verde') cor = 'bg-green-200 text-green-800 font-bold';
+                      if (diaPront === 'Amarela') cor = 'bg-amber-200 text-amber-800 font-bold';
+                      if (diaPront === 'Azul') cor = 'bg-blue-200 text-blue-800 font-bold';
+                    } else {
+                      sigla = '0';
+                    }
+                }
+
+                let fech = buscarFechamentoDia(ef, dataStr);
+                let oco = buscarOcorridoPlantaoDia(ef, dataStr);
+                let afa = buscarPlanejadoDia(ef, dataStr);
+
+                let valFinal = sigla;
+                let obsTooltip = '';
+                if (fech) { valFinal = fech.valor; obsTooltip = fech.obs || ''; }
+                else if (oco) {
+                    if (oco.valor === 'FALTA') valFinal = 'FS';
+                    else if (oco.valor === 'FOLGA' || oco.valor === 'TROCA') valFinal = 'A';
+                    else if (oco.valor === 'EXTRA') valFinal = '3';
+                    else valFinal = oco.valor;
+                    obsTooltip = oco.obs || '';
+                } else if (afa) {
+                    valFinal = afa.valor;
+                    obsTooltip = afa.obs || '';
+                }
+
+                if (fech || oco || afa) {
+                    if(['F', 'LP'].includes(valFinal)) cor = 'bg-orange-200 text-orange-900 font-bold';
+                    else if(['FS', 'A'].includes(valFinal)) cor = 'bg-red-200 text-red-900 font-bold';
+                    else if(['3', '2', '1', '0'].includes(valFinal)) cor = 'bg-indigo-100 text-indigo-900 font-bold';
+                    else cor = 'bg-slate-200 text-slate-800';
+                }
+
+                rowHtml += `<td class="p-2 border-r text-center text-[10px] ${cor} min-w-[32px]" title="${obsTooltip}">${valFinal}</td>`;
+            } else {
+                const equipes = getEquipesBcmDoDia(i);
+                ['dia', 'noite'].forEach(turno => {
+                    let sigla = 'A'; 
+                    let cor = isFds ? 'bg-weekend text-slate-300' : 'text-slate-300';
+                    
+                    const prBcpDia = obterProntidaoEfetivaNoDia(ef, dataStr);
+if (prBcpDia.includes(equipes[turno])) {
+    sigla = 'S';
+    cor = getCorEquipe(prBcpDia);
+}
+
+                    let fech = buscarFechamentoDia(ef, dataStr);
+                    let oco = buscarOcorridoPlantaoDia(ef, dataStr);
+                    let afa = buscarPlanejadoDia(ef, dataStr);
+
+                    let valFinal = sigla;
+                    let obsTooltip = '';
+                    let registroAtivo = fech || oco || afa;
+
+                    if (fech) {
+                        valFinal = fech.valor === 'OBS' ? sigla : fech.valor;
+                        obsTooltip = fech.obs || '';
+                    } else if (oco) {
+                        if (oco.valor === 'FALTA') valFinal = 'FS';
+                        else if (oco.valor === 'FOLGA' || oco.valor === 'TROCA') valFinal = 'A';
+                        else if (oco.valor === 'EXTRA') valFinal = 'D';
+                        obsTooltip = oco.obs || '';
+                    } else if (afa) {
+                        valFinal = afa.valor === 'OBS' ? sigla : afa.valor;
+                        obsTooltip = afa.obs || '';
+                    }
+
+                    if (registroAtivo && valFinal !== sigla) {
+                        if(['F', 'LP'].includes(valFinal)) cor = 'bg-orange-200 text-orange-900 font-bold';
+                        else if(['FS', 'A'].includes(valFinal)) cor = 'bg-red-200 text-red-900 font-bold';
+                        else if(['D', 'N'].includes(valFinal)) cor = 'bg-indigo-100 text-indigo-900 font-bold';
+                        else cor = 'bg-slate-200 text-slate-800';
+                    }
+
+                    rowHtml += `<td class="p-0 border-r text-center text-[10px] ${cor} min-w-[24px]" title="${obsTooltip}">${valFinal}</td>`;
+                });
+            }
+        }
+        tr.innerHTML = rowHtml;
+        tbody.appendChild(tr);
+      });
+    }
+
+   // ==========================================
+    // MODAL DE AFASTAMENTO, TROCA EM "X" E MUDANÇA DE PRONTIDÃO
+    // ==========================================
+    let filtroModalAfastAtual = 'Todos';
+
+    function renderizarOpcoesTipoAfastamento(isMunicipal) {
+      const selectTipo = document.getElementById('afast-tipo');
+      const valorAntigo = selectTipo.value;
+      selectTipo.innerHTML = isMunicipal ? `
+        <option value="F">F - Férias</option>
+        <option value="LP">LP - Licença Prêmio</option>
+        <option value="FS">FS - Falta ao Serviço</option>
+        <option value="A">A - Demais Afastamentos / Folga</option>
+        <option value="TROCA_SERVICO" class="font-bold text-indigo-700 bg-indigo-50">🔄 Troca de Serviço (2 Integrantes)</option>
+        <option value="MUDANCA_PRONTIDAO" class="font-bold text-teal-800 bg-teal-50">🔁 Mudança Temporária de Equipe (A/B/C/D)</option>
+        <option value="EXCLUIR" class="text-red-600 bg-red-50">❌ CANCELAR / REMOVER LANÇAMENTO</option>
+      ` : `
+        <option value="3">3 - Igual ou superior 18h e igual/inferior 24h</option>
+        <option value="2">2 - Igual ou superior 12h e inferior a 18h</option>
+        <option value="1">1 - Igual ou superior 8h e inferior a 12h</option>
+        <option value="0">0 - Inferior a 8h</option>
+        <option value="F">F - Férias</option>
+        <option value="LP">LP - Licença Prêmio</option>
+        <option value="FS">FS - Falta ao Serviço</option>
+        <option value="A">A - Demais Afastamentos / Folga</option>
+        <option value="TROCA_SERVICO" class="font-bold text-indigo-700 bg-indigo-50">🔄 Troca de Serviço (Inversão em "X")</option>
+        <option value="MUDANCA_PRONTIDAO" class="font-bold text-teal-800 bg-teal-50">🔁 Mudança Temporária de Prontidão</option>
+        <option value="EXCLUIR" class="text-red-600 bg-red-50">❌ CANCELAR / REMOVER LANÇAMENTO</option>
+      `;
+      if ([...selectTipo.options].some(o => o.value === valorAntigo)) selectTipo.value = valorAntigo;
+
+      const selNovaPront = document.getElementById('afast-nova-prontidao');
+      if (selNovaPront) {
+        selNovaPront.innerHTML = isMunicipal
+          ? `<option value="Equipe A">Equipe A</option><option value="Equipe B">Equipe B</option><option value="Equipe C">Equipe C</option><option value="Equipe D">Equipe D</option>`
+          : `<option value="Verde">Prontidão Verde</option><option value="Amarela">Prontidão Amarela</option><option value="Azul">Prontidão Azul</option><option value="Expediente">Expediente / Administrativo</option>`;
+      }
+      alternarCamposModalAfastamento();
+    }
+
+    function alternarCamposModalAfastamento() {
+      const tipo = document.getElementById('afast-tipo').value;
+      const boxSeg = document.getElementById('box-segundo-integrante');
+      const boxPront = document.getElementById('box-mudanca-prontidao');
+      const boxDatasPadrao = document.getElementById('box-datas-padrao');
+      const boxDatasTroca = document.getElementById('box-datas-troca');
+      const lblInt1 = document.getElementById('lbl-afast-integrante-1');
+      const hintTroca = document.getElementById('hint-troca-servico');
+
+      const id1 = document.getElementById('afast-integrante').value;
+      const ef1 = (appState.efetivo || []).find(e => obterChaveEfetivo(e) === id1);
+      const isMun = (filtroModalAfastAtual === 'Municipais') || (ef1 && (ef1.tipo === 'BCP' || ef1.tipo === 'BCM'));
+
+      boxSeg.classList.add('hidden');
+      if (boxPront) boxPront.classList.add('hidden');
+
+      if (tipo === 'TROCA_SERVICO') {
+        boxSeg.classList.remove('hidden');
+        boxDatasPadrao.classList.add('hidden');
+        boxDatasTroca.classList.remove('hidden');
+        boxDatasTroca.classList.add('grid');
+        lblInt1.textContent = "1º Integrante (Folga na Data da Troca / Repõe depois)";
+        hintTroca.innerHTML = isMun
+          ? `<strong>Municipais (BCP):</strong> A escala visual não muda de sigla, sendo lançada apenas a observação da troca para ambos.`
+          : `Na <strong>Data da Troca</strong>: o 1º recebe <strong>A</strong> e o 2º recebe <strong>3</strong>.<br>Na <strong>Data da Reposição</strong>: o 1º recebe <strong>3</strong> e o 2º recebe <strong>A</strong> (inversão em "X").`;
+      } else if (tipo === 'MUDANCA_PRONTIDAO') {
+        if (boxPront) boxPront.classList.remove('hidden');
+        boxDatasPadrao.classList.remove('hidden');
+        boxDatasTroca.classList.add('hidden');
+        boxDatasTroca.classList.remove('grid');
+        lblInt1.textContent = "Selecione o Integrante";
+      } else {
+        boxDatasPadrao.classList.remove('hidden');
+        boxDatasTroca.classList.add('hidden');
+        boxDatasTroca.classList.remove('grid');
+        lblInt1.textContent = "Selecione o Integrante";
+      }
+    }
+
+    function atualizarOpcoesTipoPorIntegrante() {
+      if (filtroModalAfastAtual === 'Municipais') { renderizarOpcoesTipoAfastamento(true); return; }
+      if (filtroModalAfastAtual === 'Militares') { renderizarOpcoesTipoAfastamento(false); return; }
+      const id = document.getElementById('afast-integrante').value;
+      const ef = (appState.efetivo || []).find(e => obterChaveEfetivo(e) === id);
+      renderizarOpcoesTipoAfastamento(ef && (ef.tipo === 'BCP' || ef.tipo === 'BCM'));
+    }
+
+    function abrirModalAfastamentoLote(tipoFiltro) {
+      filtroModalAfastAtual = tipoFiltro;
+      let selectInt1 = document.getElementById('afast-integrante');
+      let selectInt2 = document.getElementById('afast-integrante-2');
+      selectInt1.innerHTML = '<option value="">Selecione...</option>';
+      selectInt2.innerHTML = '<option value="">Selecione o 2º Integrante...</option>';
+
+      let efetivo = [...(appState.efetivo || [])];
+      const estacao = document.getElementById('filtro-estacao').value;
+      if (estacao !== "Todas") efetivo = efetivo.filter(e => (e.estacao||'').toUpperCase() === estacao.toUpperCase());
+
+      if (tipoFiltro === 'Militares') {
+        efetivo = efetivo.filter(e => e.tipo === 'Militar');
+        renderizarOpcoesTipoAfastamento(false);
+      } else if (tipoFiltro === 'Municipais') {
+        efetivo = efetivo.filter(e => e.tipo === 'BCP' || e.tipo === 'BCM');
+        renderizarOpcoesTipoAfastamento(true);
+      } else {
+        renderizarOpcoesTipoAfastamento(false);
+      }
+
+      efetivo.sort((a, b) => (a.nomeGuerra || '').localeCompare(b.nomeGuerra || '')).forEach(ef => {
+        const chave = obterChaveEfetivo(ef);
+        const opt = `<option value="${chave}">${ef.graduacao} ${ef.nomeGuerra} (${ef.estacao} - ${ef.prontidao})</option>`;
+        selectInt1.innerHTML += opt;
+        selectInt2.innerHTML += opt;
+      });
+
+      ['afast-obs','afast-inicio','afast-fim','troca-data-1','troca-data-2'].forEach(id => document.getElementById(id).value = '');
+      alternarCamposModalAfastamento();
+      document.getElementById('modal-afastamento').classList.remove('hidden');
+    }
+
+    function formatarDiaMesAbrev(dataIso) {
+      if (!dataIso) return '';
+      const meses = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+      const partes = dataIso.split('-');
+      return `${partes[2]}${meses[parseInt(partes[1], 10) - 1] || ''}`;
+    }
+
+    function gravarOuAtualizarAfastamento(efObj, dataStr, valorSigla, textoObs) {
+      if (!appState.afastamentos) appState.afastamentos = [];
+      const chaveId = obterChaveEfetivo(efObj);
+      let idx = appState.afastamentos.findIndex(a => a.data === dataStr && registroPertenceAoEfetivo(a, efObj));
+      if (idx > -1) {
+        appState.afastamentos[idx] = { id: chaveId, re: efObj.re || '', nomeGuerra: efObj.nomeGuerra || '', data: dataStr, valor: valorSigla, obs: textoObs };
+      } else {
+        appState.afastamentos.push({ id: chaveId, re: efObj.re || '', nomeGuerra: efObj.nomeGuerra || '', data: dataStr, valor: valorSigla, obs: textoObs });
+      }
+    }
+
+    async function processarAfastamentoLote() {
+      const btnSalvar = document.getElementById('btn-salvar-modal-afast');
+      const id = document.getElementById('afast-integrante').value;
+      const tipo = document.getElementById('afast-tipo').value;
+      const obs = document.getElementById('afast-obs').value.trim();
+
+      if (tipo === 'TROCA_SERVICO') {
+        const id2 = document.getElementById('afast-integrante-2').value;
+        const dataTroca = document.getElementById('troca-data-1').value;
+        const dataReposicao = document.getElementById('troca-data-2').value;
+
+        if (!id || !id2 || !dataTroca || !dataReposicao) {
+          mostrarAlerta("Para Troca de Serviço, selecione os 2 integrantes, a Data da Troca e a Data da Reposição."); return;
+        }
+        if (id === id2) {
+          mostrarAlerta("Selecione dois integrantes diferentes para realizar a troca de serviço."); return;
+        }
+
+        const ef1 = (appState.efetivo || []).find(e => obterChaveEfetivo(e) === id);
+        const ef2 = (appState.efetivo || []).find(e => obterChaveEfetivo(e) === id2);
+        if (!ef1 || !ef2) return;
+
+        btnSalvar.disabled = true; btnSalvar.textContent = "Gravando...";
+        const isMun1 = (ef1.tipo === 'BCP' || ef1.tipo === 'BCM');
+        const isMun2 = (ef2.tipo === 'BCP' || ef2.tipo === 'BCM');
+        const obsPadrao = `${ef1.graduacao} ${ef1.nomeGuerra} X ${ef2.graduacao} ${ef2.nomeGuerra} | TROCA DE SERVIÇO (${formatarDiaMesAbrev(dataTroca)} X ${formatarDiaMesAbrev(dataReposicao)})${obs ? ' - ' + obs : ''}`.toUpperCase();
+
+        gravarOuAtualizarAfastamento(ef1, dataTroca, isMun1 ? 'OBS' : 'A', obsPadrao);
+        gravarOuAtualizarAfastamento(ef2, dataTroca, isMun2 ? 'OBS' : '3', obsPadrao);
+        gravarOuAtualizarAfastamento(ef1, dataReposicao, isMun1 ? 'OBS' : '3', obsPadrao);
+        gravarOuAtualizarAfastamento(ef2, dataReposicao, isMun2 ? 'OBS' : 'A', obsPadrao);
+
+        renderDados();
+        await sincronizarComNuvem(true);
+        btnSalvar.disabled = false; btnSalvar.textContent = "Salvar Lançamento";
+        document.getElementById('modal-afastamento').classList.add('hidden');
+        mostrarAlerta(`Troca de serviço em "X" gravada entre ${ef1.nomeGuerra} e ${ef2.nomeGuerra}!`);
+        return;
+      }
+
+      const inicio = document.getElementById('afast-inicio').value;
+      const fim = document.getElementById('afast-fim').value;
+      if (!id || !tipo || !inicio || !fim) { mostrarAlerta("Preencha todos os campos obrigatórios."); return; }
+      if (inicio > fim) { mostrarAlerta("A data final não pode ser anterior à data inicial."); return; }
+
+      const efAlvo = (appState.efetivo || []).find(e => obterChaveEfetivo(e) === id);
+      if (!efAlvo) return;
+
+      btnSalvar.disabled = true; btnSalvar.textContent = "Gravando...";
+
+      if (tipo === 'MUDANCA_PRONTIDAO') {
+        const novaPront = document.getElementById('afast-nova-prontidao').value;
+        if (!Array.isArray(appState.mudancasProntidao)) appState.mudancasProntidao = [];
+        appState.mudancasProntidao.push({
+          id: obterChaveEfetivo(efAlvo),
+          re: efAlvo.re || '',
+          nomeGuerra: efAlvo.nomeGuerra || '',
+          novaProntidao: novaPront,
+          inicio: inicio,
+          fim: fim,
+          obs: obs
+        });
+        renderDados();
+        await sincronizarComNuvem(true);
+        btnSalvar.disabled = false; btnSalvar.textContent = "Salvar Lançamento";
+        document.getElementById('modal-afastamento').classList.add('hidden');
+        mostrarAlerta(`Mudança temporária para ${novaPront} gravada de ${formatarDataBR(inicio)} a ${formatarDataBR(fim)}!`);
+        return;
+      }
+
+      if (!appState.afastamentos) appState.afastamentos = [];
+      let inseridos = 0;
+
+      if (tipo === "EXCLUIR" && Array.isArray(appState.mudancasProntidao)) {
+        appState.mudancasProntidao = appState.mudancasProntidao.filter(m =>
+          !(registroPertenceAoEfetivo(m, efAlvo) && m.inicio <= fim && m.fim >= inicio)
+        );
+      }
+
+      const [anoI, mesI, diaI] = inicio.split('-');
+      const [anoF, mesF, diaF] = fim.split('-');
+      let dInicio = new Date(anoI, mesI - 1, diaI);
+      let dFim = new Date(anoF, mesF - 1, diaF);
+
+      for (let d = new Date(dInicio); d <= dFim; d.setDate(d.getDate() + 1)) {
+        let dataStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        let idx = appState.afastamentos.findIndex(a => a.data === dataStr && registroPertenceAoEfetivo(a, efAlvo));
+        if (tipo === "EXCLUIR") {
+          if (idx > -1) { appState.afastamentos.splice(idx, 1); inseridos++; }
+        } else {
+          gravarOuAtualizarAfastamento(efAlvo, dataStr, tipo, obs);
+          inseridos++;
+        }
+      }
+      renderDados();
+      await sincronizarComNuvem(true);
+      btnSalvar.disabled = false; btnSalvar.textContent = "Salvar Lançamento";
+      document.getElementById('modal-afastamento').classList.add('hidden');
+      mostrarAlerta(tipo === "EXCLUIR" ? `${inseridos} dia(s) removido(s)!` : `${inseridos} dia(s) gravado(s) na nuvem!`);
+    }
+
+    // ==========================================
+    // ABA 4: PESQUISA E IMPRESSÃO DE AFASTAMENTOS
+    // ==========================================
+    function popularSelectPesquisaEfetivo() {
+      const cat = document.getElementById('pesq-categoria').value;
+      const estacao = document.getElementById('filtro-estacao').value;
+      const sel = document.getElementById('pesq-integrante');
+      const valorAnterior = sel.value;
+
+      let lista = [...(appState.efetivo || [])];
+      if (estacao !== 'Todas') lista = lista.filter(e => (e.estacao || '').toUpperCase() === estacao.toUpperCase());
+      if (cat === 'Militares') lista = lista.filter(e => e.tipo === 'Militar');
+      if (cat === 'Municipais') lista = lista.filter(e => e.tipo === 'BCP' || e.tipo === 'BCM');
+
+      sel.innerHTML = `<option value="Todos">-- Todos --</option>`;
+      lista.sort((a, b) => (a.nomeGuerra || '').localeCompare(b.nomeGuerra || '')).forEach(ef => {
+        const ch = obterChaveEfetivo(ef);
+        sel.innerHTML += `<option value="${ch}">${ef.graduacao} ${ef.nomeGuerra} (${ef.estacao})</option>`;
+      });
+      if ([...sel.options].some(o => o.value === valorAnterior)) sel.value = valorAnterior;
+    }
+
+    function limparFiltrosPesquisa() {
+      document.getElementById('pesq-categoria').value = 'Todos';
+      document.getElementById('pesq-texto').value = '';
+      document.getElementById('pesq-tipo-afast').value = 'Todos';
+      popularSelectPesquisaEfetivo();
+      document.getElementById('pesq-integrante').value = 'Todos';
+      executarPesquisaAfastamentos();
+    }
+
+    function formatarDataBR(iso) {
+      if (!iso) return '';
+      const [a, m, d] = iso.split('-');
+      return `${d}/${m}/${a}`;
+    }
+
+    function obterDescricaoSiglaAfast(sigla) {
+      const mapa = { 'F': 'Férias (F)', 'LP': 'Licença Prêmio (LP)', 'FS': 'Falta ao Serviço (FS)', 'A': 'Afastamento / Folga (A)', 'OBS': 'Troca / Obs (BCP)', '3': 'Reposição Troca (3)' };
+      return mapa[sigla] || sigla;
+    }
+
+    function executarPesquisaAfastamentos() {
+      const estacaoGlobal = document.getElementById('filtro-estacao').value;
+      const categoria = document.getElementById('pesq-categoria').value;
+      const idInt = document.getElementById('pesq-integrante').value;
+      const texto = (document.getElementById('pesq-texto').value || '').trim().toUpperCase();
+      const tipoAfast = document.getElementById('pesq-tipo-afast').value;
+      const dataIni = document.getElementById('pesq-data-ini').value;
+      const dataFim = document.getElementById('pesq-data-fim').value;
+
+      let efetivo = [...(appState.efetivo || [])];
+      if (estacaoGlobal !== 'Todas') efetivo = efetivo.filter(e => (e.estacao || '').toUpperCase() === estacaoGlobal.toUpperCase());
+      if (categoria === 'Militares') efetivo = efetivo.filter(e => e.tipo === 'Militar');
+      if (categoria === 'Municipais') efetivo = efetivo.filter(e => e.tipo === 'BCP' || e.tipo === 'BCM');
+      if (idInt !== 'Todos') efetivo = efetivo.filter(e => obterChaveEfetivo(e) === idInt);
+      if (texto) {
+        efetivo = efetivo.filter(e => 
+          (e.nomeGuerra || '').toUpperCase().includes(texto) ||
+          (e.nome || '').toUpperCase().includes(texto) ||
+          (e.re || '').toUpperCase().includes(texto) ||
+          (e.graduacao || '').toUpperCase().includes(texto)
+        );
+      }
+
+      let periodosEncontrados = [];
+
+      efetivo.forEach(ef => {
+        let mapaDias = new Map();
+        (appState.afastamentos || []).filter(a => registroPertenceAoEfetivo(a, ef)).forEach(a => mapaDias.set(a.data, { valor: a.valor, obs: a.obs || '' }));
+        (ocorrenciasUnificadasCache || []).filter(o => registroPertenceAoEfetivo(o, ef)).forEach(o => {
+          let v = o.valor;
+          if (v === 'FALTA') v = 'FS';
+          else if (v === 'FOLGA' || v === 'TROCA') v = 'A';
+          else if (v === 'EXTRA') return;
+          mapaDias.set(o.data, { valor: v, obs: o.obs || '' });
+        });
+        (appState.fechamentoMes || []).filter(f => registroPertenceAoEfetivo(f, ef)).forEach(f => mapaDias.set(f.data, { valor: f.valor, obs: f.obs || '' }));
+
+        let datasOrdenadas = Array.from(mapaDias.keys()).sort();
+        let bloco = null;
+
+        datasOrdenadas.forEach(dt => {
+          if ((dataIni && dt < dataIni) || (dataFim && dt > dataFim)) return;
+          let reg = mapaDias.get(dt);
+          let isTrocaRep = (reg.valor === '3' && (reg.obs || '').includes('TROCA DE SERVIÇO'));
+          if (!['F', 'LP', 'FS', 'A', 'OBS'].includes(reg.valor) && !isTrocaRep) return;
+          if (tipoAfast !== 'Todos' && reg.valor !== tipoAfast) return;
+
+          if (bloco) {
+            let diffDias = Math.round((new Date(dt + 'T00:00:00') - new Date(bloco.fim + 'T00:00:00')) / 86400000);
+            if (diffDias === 1 && bloco.valor === reg.valor && bloco.obs === reg.obs) {
+              bloco.fim = dt; bloco.qtdDias++; return;
+            } else {
+              periodosEncontrados.push(bloco);
+            }
+          }
+          bloco = { ef, valor: reg.valor, obs: reg.obs, inicio: dt, fim: dt, qtdDias: 1 };
+        });
+        if (bloco) periodosEncontrados.push(bloco);
+      });
+
+      periodosEncontrados.sort((a, b) => a.inicio.localeCompare(b.inicio) || (a.ef.nomeGuerra || '').localeCompare(b.ef.nomeGuerra || ''));
+      resultadosPesquisaCache = periodosEncontrados;
+
+      const tbody = document.getElementById('tbody-pesquisa-afastamentos');
+      document.getElementById('pesq-contador-resultados').textContent = `Períodos encontrados: ${periodosEncontrados.length}`;
+
+      if (periodosEncontrados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center p-10 text-slate-400 font-bold">Nenhum afastamento encontrado para os filtros selecionados.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = periodosEncontrados.map(p => {
+        let badgeCor = 'bg-slate-100 text-slate-800';
+        if (p.valor === 'F' || p.valor === 'LP') badgeCor = 'bg-orange-100 text-orange-800';
+        if (p.valor === 'FS') badgeCor = 'bg-red-100 text-red-800';
+        if (p.valor === 'A') badgeCor = 'bg-blue-100 text-blue-800';
+        if (p.valor === 'OBS' || p.valor === '3') badgeCor = 'bg-purple-100 text-purple-800';
+        let strPeriodo = p.inicio === p.fim ? formatarDataBR(p.inicio) : `${formatarDataBR(p.inicio)} a ${formatarDataBR(p.fim)}`;
+        return `<tr class="hover:bg-slate-50 border-b">
+          <td class="p-3 border-r font-bold text-slate-700">${p.ef.graduacao} ${p.ef.nomeGuerra} <span class="text-[10px] font-normal text-slate-400">${p.ef.re ? '('+p.ef.re+')' : ''}</span></td>
+          <td class="p-3 border-r text-center">${p.ef.tipo}</td>
+          <td class="p-3 border-r text-center">${p.ef.estacao}</td>
+          <td class="p-3 border-r text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeCor}">${obterDescricaoSiglaAfast(p.valor)}</span></td>
+          <td class="p-3 border-r text-center font-bold">${strPeriodo}</td>
+          <td class="p-3 border-r text-center font-bold">${p.qtdDias}</td>
+          <td class="p-3 text-slate-600">${(p.obs || '-').replace('|', ' — ')}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function imprimirRelatorioPesquisaAfastamentos() {
+      executarPesquisaAfastamentos();
+      if (resultadosPesquisaCache.length === 0) { mostrarAlerta("Não há registros na pesquisa atual para imprimir."); return; }
+
+      const estacao = document.getElementById('filtro-estacao').value;
+      const cat = document.getElementById('pesq-categoria').value;
+      const dIni = document.getElementById('pesq-data-ini').value;
+      const dFim = document.getElementById('pesq-data-fim').value;
+
+      let linhasHtml = resultadosPesquisaCache.map((p, idx) => {
+        let strPeriodo = p.inicio === p.fim ? formatarDataBR(p.inicio) : `${formatarDataBR(p.inicio)} a ${formatarDataBR(p.fim)}`;
+        return `<tr>
+          <td contenteditable="true">${idx + 1}</td>
+          <td contenteditable="true" class="text-left font-bold">${p.ef.graduacao} ${p.ef.nomeGuerra}</td>
+          <td contenteditable="true">${p.ef.re || '-'}</td>
+          <td contenteditable="true">${p.ef.tipo}</td>
+          <td contenteditable="true">${p.ef.estacao}</td>
+          <td contenteditable="true" class="font-bold">${obterDescricaoSiglaAfast(p.valor)}</td>
+          <td contenteditable="true">${strPeriodo}</td>
+          <td contenteditable="true" class="font-bold">${p.qtdDias}</td>
+          <td contenteditable="true" class="text-left">${(p.obs || '-').replace('|', ' — ')}</td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('doc-container').innerHTML = `
+        <div class="a4-sheet portrait">
+          <div style="text-align:center; font-weight:bold; margin-bottom:15px; font-size: 13px; line-height:1.4;">
+            POLÍCIA MILITAR DO ESTADO DE SÃO PAULO<br>CORPO DE BOMBEIROS - 15º GB / 2º SGB<br>RELATÓRIO DE AFASTAMENTOS E PERÍODOS DO EFETIVO
+          </div>
+          <div style="font-size: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; font-weight: bold; border: 1px solid #000; padding: 6px; background: #f8fafc;">
+            <span contenteditable="true">ESTAÇÃO: ${estacao.toUpperCase()}</span>
+            <span contenteditable="true">CATEGORIA: ${cat.toUpperCase()}</span>
+            <span contenteditable="true">PERÍODO: ${dIni ? formatarDataBR(dIni) : 'INÍCIO'} A ${dFim ? formatarDataBR(dFim) : 'FIM'}</span>
+          </div>
+          <table class="report-table">
+            <thead>
+              <tr><th style="width:4%;">#</th><th style="width:22%;">POSTO/GRAD & NOME</th><th style="width:10%;">RE / MAT.</th><th style="width:9%;">VÍNCULO</th><th style="width:11%;">ESTAÇÃO</th><th style="width:12%;">TIPO</th><th style="width:14%;">PERÍODO</th><th style="width:5%;">DIAS</th><th style="width:13%;">OBSERVAÇÃO</th></tr>
+            </thead>
+            <tbody>${linhasHtml}</tbody>
+          </table>
+          <div class="flex justify-around items-end mt-12 text-center text-[10px]">
+            <div contenteditable="true"><div class="border-t border-black w-48 mx-auto mb-1"></div><strong>ELABORADOR</strong><br>LUCAS HENRIQUE GALVÃO LEITE<br>CB PM AUX ADM</div>
+            <div contenteditable="true"><div class="border-t border-black w-48 mx-auto mb-1"></div><strong>CONFERÊNCIA</strong><br>JEAN WILLIAN DE MORAES FONSECA<br>1º TEN PM CMT EB</div>
+          </div>
+        </div>`;
+      document.getElementById('titulo-modal-relatorio').innerHTML = '<i class="fa-solid fa-magnifying-glass text-xl"></i> &nbsp; Relatório de Pesquisa de Afastamentos';
+      document.getElementById('modal-relatorios').classList.remove('hidden');
+    }
+
+    // ==========================================
+    // GERAÇÃO DE SIPA F-25 E RELATÓRIO BCP
+    // ==========================================
+    function ehGraduacaoTenente(graduacao) {
+      return (graduacao || '').toUpperCase().trim().includes('TEN');
+    }
+
+    function renderizarFolhaSIPA(titulo, listaEfetivo, ano, mes, mesStr, estacao, diasNoMes, totalPaginas, paginaAtual) {
+        if(listaEfetivo.length === 0) return '';
+        let obsGerais = [], htmlTbody = '', dadosLinhas = [];
+        const mesAbrev = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'][mes-1];
+
+        function destacarNomeGuerra(nomeCompleto, nomeGuerra) {
+            if (!nomeCompleto) return nomeGuerra || '';
+            let nc = nomeCompleto.toUpperCase();
+            let ng = (nomeGuerra || '').toUpperCase().trim();
+            if (!ng) return nc;
+            let ngLimpo = ng.replace(/^(SGT|CB|SD|TEN|CAP|SUBTEN|1º|2º|3º|1°|2°|3°|PM)\s+/g, '').trim();
+            if (ngLimpo && nc.includes(ngLimpo)) return nc.replace(ngLimpo, `<strong style="font-weight:900;">${ngLimpo}</strong>`);
+            return `<strong>${nc}</strong>`;
+        }
+
+        function obterNomeTipo(sigla) {
+            const mapa = { 'F': 'FÉRIAS', 'LP': 'LICENÇA PRÊMIO', 'FS': 'FALTA AO SERVIÇO', 'A': 'AFASTAMENTO / FOLGA' };
+            return mapa[sigla] || `CÓD. ${sigla}`;
+        }
+
+        listaEfetivo.forEach(ef => {
+            let contagens = { '0':0, '1':0, '2':0, '3':0 }, diasInfo = [];
+            for(let i=1; i<=diasNoMes; i++) {
+                let dataAtual = new Date(ano, mes-1, i);
+                let diaSemana = dataAtual.getDay();
+                let dataStr = `${ano}-${mesStr}-${String(i).padStart(2, '0')}`;
+                let sigla = 'A';
+                if (ef.prontidao === 'Expediente' || ef.prontidao === 'Administrativo' || ehGraduacaoTenente(ef.graduacao)) {
+                    if (diaSemana !== 0 && diaSemana !== 6) sigla = '1';
+                } else {
+                    const diff = Math.floor((dataAtual - new Date(2026, 10, 6)) / 86400000);
+                    let ciclo = diff % 3; if (ciclo < 0) ciclo += 3;
+                    if ((ef.prontidao || '').toUpperCase() === ['VERDE', 'AMARELA', 'AZUL'][ciclo]) sigla = '3';
+                }
+
+                let fech = buscarFechamentoDia(ef, dataStr);
+                let oco = buscarOcorridoPlantaoDia(ef, dataStr);
+                let afa = buscarPlanejadoDia(ef, dataStr);
+                let valFinal = sigla, obsFinal = "";
+
+                if (fech) { valFinal = fech.valor; obsFinal = fech.obs || ""; }
+                else if (oco) {
+                    if (oco.valor === 'FALTA') valFinal = 'FS';
+                    else if (oco.valor === 'FOLGA' || oco.valor === 'TROCA') valFinal = 'A';
+                    else if (oco.valor === 'EXTRA') valFinal = '3';
+                    else valFinal = oco.valor;
+                    obsFinal = `${oco.substituto ? 'POR: ' + oco.substituto + ' ' : ''}${oco.obs || ''}`.trim();
+                } else if (afa) {
+                    valFinal = afa.valor; obsFinal = afa.obs || "";
+                }
+
+                if (contagens[valFinal] !== undefined) contagens[valFinal]++;
+                diasInfo.push({ dia: i, val: valFinal, obs: obsFinal.trim().toUpperCase(), temObs: (obsFinal.trim() !== '') || ['F', 'LP', 'FS'].includes(valFinal) });
+            }
+
+            let blocos = [], blocoAtual = null;
+            diasInfo.forEach(d => {
+                if (d.temObs) {
+                    if (blocoAtual && blocoAtual.val === d.val && blocoAtual.obs === d.obs && blocoAtual.fim === d.dia - 1) blocoAtual.fim = d.dia;
+                    else { if (blocoAtual) blocos.push(blocoAtual); blocoAtual = { inicio: d.dia, fim: d.dia, val: d.val, obs: d.obs }; }
+                } else {
+                    if (blocoAtual) { blocos.push(blocoAtual); blocoAtual = null; }
+                }
+            });
+            if (blocoAtual) blocos.push(blocoAtual);
+
+            let chavesObsMilitar = [];
+            blocos.forEach(b => {
+                let dIniStr = String(b.inicio).padStart(2, '0'), dFimStr = String(b.fim).padStart(2, '0');
+                let dataCol = `${dIniStr}${mesAbrev}.`, milCol = `${ef.graduacao} ${ef.nomeGuerra}`;
+                let textoBase = b.obs || obterNomeTipo(b.val);
+                if (textoBase.includes('|')) {
+                    let partesTroca = textoBase.split('|');
+                    milCol = partesTroca[0].trim();
+                    textoBase = partesTroca.slice(1).join('|').trim();
+                }
+                let descCol = (b.fim > b.inicio && !/\d{2}\/\d{2}/.test(textoBase) && !textoBase.includes('TROCA DE SERVIÇO'))
+                    ? `${textoBase} DE ${dIniStr}/${mesStr} A ${dFimStr}/${mesStr}`
+                    : textoBase;
+                let chaveUnica = `${dataCol}|${milCol}|${descCol}`;
+                obsGerais.push({ chave: chaveUnica, dataNum: b.inicio, dataCol, milCol, descCol });
+                chavesObsMilitar.push(chaveUnica);
+            });
+
+            dadosLinhas.push({ ef, diasInfo, contagens, chavesObs: chavesObsMilitar });
+        });
+
+        obsGerais.sort((a, b) => a.dataNum - b.dataNum);
+        let mapaNumerosObs = new Map(), listaObsUnicas = [], contadorObs = 1;
+        obsGerais.forEach(o => {
+            if (!mapaNumerosObs.has(o.chave)) {
+                mapaNumerosObs.set(o.chave, contadorObs);
+                listaObsUnicas.push({ num: contadorObs++, dataCol: o.dataCol, milCol: o.milCol, descCol: o.descCol });
+            }
+        });
+
+        dadosLinhas.forEach(item => {
+            let ef = item.ef, contagens = item.contagens;
+            let isDestaque = (ef.graduacao || '').includes('SGT') || (ef.funcao || '').includes('CMT');
+            let corPront = '';
+            if (isDestaque && titulo === 'OPERACIONAL') {
+                let p = (ef.prontidao || '').toUpperCase();
+                if (p.includes('AMARELA')) corPront = 'background-color: #fef08a; -webkit-print-color-adjust: exact; print-color-adjust: exact;';
+                else if (p.includes('VERDE')) corPront = 'background-color: #bbf7d0; -webkit-print-color-adjust: exact; print-color-adjust: exact;';
+                else if (p.includes('AZUL')) corPront = 'background-color: #bae6fd; -webkit-print-color-adjust: exact; print-color-adjust: exact;';
+            }
+
+            let htmlCelulas = item.diasInfo.map(d => `<td contenteditable="true" style="border:1px solid #000; padding:1px 0; text-align:center; font-size:8px; ${corPront}">${d.val}</td>`).join('');
+            let calc12DA = (contagens['1']*1) + (contagens['2']*2) + (contagens['3']*3);
+            let calcAA = (contagens['0']*1) + (contagens['1']*1) + (contagens['2']*1) + (contagens['3']*1);
+
+            let numsLinha = [];
+            item.chavesObs.forEach(ch => { let n = mapaNumerosObs.get(ch); if (n && !numsLinha.includes(n)) numsLinha.push(n); });
+            numsLinha.sort((a, b) => a - b);
+
+            htmlTbody += `<tr style="height: 15px;">
+                <td contenteditable="true" style="border:1px solid #000; padding:1px 3px; text-align:left; white-space:nowrap; font-size:8px; ${corPront}">${ef.graduacao}</td>
+                <td contenteditable="true" style="border:1px solid #000; padding:1px 3px; text-align:center; white-space:nowrap; font-size:8px; ${corPront}">${ef.re || ''}</td>
+                <td contenteditable="true" style="border:1px solid #000; padding:1px 4px; text-align:left; white-space:nowrap; font-size:8px; ${corPront}">${destacarNomeGuerra(ef.nome, ef.nomeGuerra)}</td>
+                ${htmlCelulas}
+                <td contenteditable="true" style="border:1px solid #000; padding:1px 2px; text-align:center; font-weight:bold; font-size:8px;">${calc12DA}</td>
+                <td contenteditable="true" style="border:1px solid #000; padding:1px 2px; text-align:center; font-weight:bold; font-size:8px;">${calcAA}</td>
+                <td contenteditable="true" style="border:1px solid #000; padding:1px 4px; text-align:left; font-weight:bold; font-size:8px;">${numsLinha.join(', ')}</td>
+            </tr>`;
+        });
+
+        let sufixoTitulo = titulo === 'ADMINISTRATIVO' ? ' - ADM' : (titulo === 'COMANDO' ? ' - OFICIAIS (1º TEN PM)' : '');
+        let diasHeader = Array.from({ length: diasNoMes }, (_, i) => `<th style="border:1px solid #000; width: 14px; font-size: 7.5px; padding: 1px 0; background:#fff;">${i + 1}</th>`).join('');
+        let totalLinhasObs = Math.max(27, listaObsUnicas.length);
+        let obsRows = Array.from({ length: totalLinhasObs }, (_, idx) => {
+            let o = listaObsUnicas[idx];
+            return `<tr style="height: 12px; font-size: 7.5px;">
+                <td contenteditable="true" style="border: 1px solid #000; width: 22px; text-align: right; padding: 0 3px;">${idx + 1}</td>
+                <td contenteditable="true" style="border: 1px solid #000; width: 42px; text-align: left; padding: 0 3px;">${o ? o.dataCol : ''}</td>
+                <td contenteditable="true" style="border: 1px solid #000; width: 175px; text-align: left; padding: 0 4px;">${o ? o.milCol : ''}</td>
+                <td contenteditable="true" style="border: 1px solid #000; text-align: left; padding: 0 4px;">${o ? o.descCol : ''}</td>
+            </tr>`;
+        }).join('');
+
+        return `<div class="a4-sheet" style="padding: 0.6cm;">
+          <div style="display: flex; gap: 10px; align-items: stretch; margin-bottom: 4px;">
+            <div style="width: 30%; border: 1.5px solid #000; display: flex; align-items: center; padding: 4px 8px;">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Bras%C3%A3o_do_estado_de_S%C3%A3o_Paulo.svg/200px-Bras%C3%A3o_do_estado_de_S%C3%A3o_Paulo.svg.png" style="height: 44px; width: auto; margin-right: 8px;" onerror="this.style.display='none'">
+              <div contenteditable="true" style="flex: 1; text-align: center; font-weight: bold; font-size: 11px; line-height: 1.25;">POLÍCIA MILITAR<br>DO<br>ESTADO DE SÃO PAULO</div>
+            </div>
+            <table style="width: 70%; border-collapse: collapse; border: 1.5px solid #000; text-align: center;">
+              <tr><th colspan="6" contenteditable="true" style="background-color: #9ca3af; border: 1px solid #000; font-size: 12px; font-weight: bold; padding: 2px;">CONTROLE DE FREQUÊNCIA${sufixoTitulo}</th></tr>
+              <tr style="background-color: #e5e7eb; font-size: 8.5px; font-weight: bold;">
+                <td style="border: 1px solid #000; padding: 2px; width: 36%;">OPM</td><td style="border: 1px solid #000; padding: 2px; width: 24%;">CÓDIGO DA OPM</td><td style="border: 1px solid #000; padding: 2px; width: 9%;">MÊS</td><td style="border: 1px solid #000; padding: 2px; width: 9%;">ANO</td><td style="border: 1px solid #000; padding: 2px; width: 11%;">Nº DE PÁGINAS</td><td style="border: 1px solid #000; padding: 2px; width: 11%;">PÁGINA Nº</td>
+              </tr>
+              <tr style="font-size: 10px; font-weight: bold;">
+                <td contenteditable="true" style="border: 1px solid #000; padding: 3px;">15º GB - 2º SGB</td><td contenteditable="true" style="border: 1px solid #000; padding: 3px;">703152102</td><td contenteditable="true" style="border: 1px solid #000; padding: 3px;">${mesStr}</td><td contenteditable="true" style="border: 1px solid #000; padding: 3px;">${ano}</td><td contenteditable="true" style="border: 1px solid #000; padding: 3px;">${totalPaginas}</td><td contenteditable="true" style="border: 1px solid #000; padding: 3px;">${paginaAtual}</td>
+              </tr>
+            </table>
+          </div>
+          <div contenteditable="true" style="border: 1px solid #000; text-align: center; font-size: 7.2px; font-weight: bold; padding: 2px 4px; margin-bottom: 6px;">
+            "0" INFERIOR A 8H / "1" - IGUAL OU SUPERIOR 8H E INFERIOR A 12H / "2" - IGUAL OU SUPERIOR 12H E INFERIOR A 18H / "3" - IGUAL OU SUPERIOR 18H E IGUAL OU INFERIOR A 24H / F - FÉRIAS / LP - LICENÇA PRÊMIO / FS - FALTA AO SERVIÇO / A - DEMAIS AFASTAMENTOS
+          </div>
+          <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #000; margin-bottom: 6px;">
+            <thead>
+              <tr style="background-color: #fff; font-size: 8px; font-weight: bold;">
+                <th rowspan="2" style="border:1px solid #000; width: 52px; padding: 2px;">POSTO/GRAD</th><th rowspan="2" style="border:1px solid #000; width: 48px; padding: 2px;">RE</th><th rowspan="2" style="border:1px solid #000; width: 165px; padding: 2px;">NOME</th><th colspan="${diasNoMes}" style="border:1px solid #000; padding: 2px; letter-spacing: 2px;">DIAS DO MÊS</th><th colspan="2" style="border:1px solid #000; padding: 2px;">TOTAL</th><th rowspan="2" style="border:1px solid #000; width: 85px; padding: 2px;">OBSERVAÇÃO</th>
+              </tr>
+              <tr style="background-color: #fff; font-size: 7.5px; font-weight: bold;">${diasHeader}<th style="border:1px solid #000; width: 26px; padding: 1px;">1/2 D.A.</th><th style="border:1px solid #000; width: 22px; padding: 1px;">A.A.</th></tr>
+            </thead>
+            <tbody>${htmlTbody}</tbody>
+          </table>
+          <div style="display: flex; justify-content: space-between; gap: 14px; margin-bottom: 8px;">
+            <table style="width: 32%; border-collapse: collapse; border: 1.5px solid #000; text-align: center;"><tr><th style="background-color: #9ca3af; border: 1px solid #000; font-size: 8.5px; font-weight: bold; padding: 2px;">ELABORADOR</th></tr><tr><td contenteditable="true" style="height: 52px; vertical-align: bottom; padding-bottom: 4px; font-size: 8.5px; line-height: 1.3;">LUCAS HENRIQUE GALVÃO LEITE<br>CB PM AUX ADM EB PORTO FELIZ</td></tr></table>
+            <table style="width: 32%; border-collapse: collapse; border: 1.5px solid #000; text-align: center;"><tr><th style="background-color: #9ca3af; border: 1px solid #000; font-size: 8.5px; font-weight: bold; padding: 2px;">CONFERÊNCIA</th></tr><tr><td contenteditable="true" style="height: 52px; vertical-align: bottom; padding-bottom: 4px; font-size: 8.5px; line-height: 1.3;">JEAN WILLIAN DE MORAES FONSECA<br>1º TEN PM CMT EB PORTO FELIZ</td></tr></table>
+            <table style="width: 32%; border-collapse: collapse; border: 1.5px solid #000; text-align: center;"><tr><th style="background-color: #9ca3af; border: 1px solid #000; font-size: 8.5px; font-weight: bold; padding: 2px;">DIRETOR / CMT / CHEFE</th></tr><tr><td contenteditable="true" style="height: 52px; vertical-align: bottom; padding-bottom: 4px; font-size: 8.5px; line-height: 1.3;">HERON BUONO DE OLIVEIRA<br>CAP PM CMT 2º SGB</td></tr></table>
+          </div>
+          <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #000;">
+            <thead><tr><th colspan="4" style="background-color: #9ca3af; border: 1px solid #000; font-size: 8.5px; font-weight: bold; padding: 2px; text-align: center;">OBSERVAÇÕES</th></tr></thead>
+            <tbody>${obsRows}</tbody>
+          </table>
+        </div>`;
+    }
+
+    function gerarSipaMilitares() {
+      const estacao = document.getElementById('filtro-estacao').value;
+      const mesValor = document.getElementById('filtro-mes').value;
+      if(!mesValor) return;
+      const [anoStr, mesStr] = mesValor.split('-');
+      const ano = parseInt(anoStr), mes = parseInt(mesStr), diasNoMes = new Date(ano, mes, 0).getDate();
+
+      let efetivoFiltro = (appState.efetivo || []).filter(e => e.tipo === 'Militar' && (estacao === "Todas" || (e.estacao||'').toUpperCase() === estacao.toUpperCase()));
+      let oficiaisTen = efetivoFiltro.filter(e => ehGraduacaoTenente(e.graduacao));
+      let operacional = efetivoFiltro.filter(e => !ehGraduacaoTenente(e.graduacao) && e.prontidao !== 'Expediente' && e.prontidao !== 'Administrativo');
+      let admin = efetivoFiltro.filter(e => !ehGraduacaoTenente(e.graduacao) && (e.prontidao === 'Expediente' || e.prontidao === 'Administrativo'));
+
+      let paginas = [];
+      if(operacional.length > 0) paginas.push({ titulo: 'OPERACIONAL', lista: operacional });
+      if(admin.length > 0) paginas.push({ titulo: 'ADMINISTRATIVO', lista: admin });
+      if(oficiaisTen.length > 0) paginas.push({ titulo: 'COMANDO', lista: oficiaisTen });
+
+      let htmlCompleto = paginas.map((p, i) => renderizarFolhaSIPA(p.titulo, p.lista, ano, mes, mesStr, estacao, diasNoMes, paginas.length, i+1)).join('');
+      if(!htmlCompleto) { mostrarAlerta("Nenhum militar encontrado para essa estação/mês."); return; }
+
+      document.getElementById('doc-container').innerHTML = htmlCompleto;
+      document.getElementById('titulo-modal-relatorio').innerHTML = '<i class="fa-solid fa-file-invoice text-xl"></i> &nbsp; Relatório SIPA F-25 (Operacional / ADM / 1º Ten PM)';
+      document.getElementById('modal-relatorios').classList.remove('hidden');
+    }
+
+    function imprimirEscalaBCP() {
+      const mesValor = document.getElementById('filtro-mes').value;
+      const estacao = document.getElementById('filtro-estacao').value;
+      if(!mesValor) return;
+      const [anoStr, mesStr] = mesValor.split('-');
+      const ano = parseInt(anoStr), mes = parseInt(mesStr), diasNoMes = new Date(ano, mes, 0).getDate();
+
+      let bcms = (appState.efetivo || []).filter(e => (e.tipo === 'BCM' || e.tipo === 'BCP') && (estacao === "Todas" || (e.estacao||'').toUpperCase() === estacao.toUpperCase()));
+      let eqA = bcms.filter(b => (b.prontidao || '').includes('A'));
+      let eqB = bcms.filter(b => (b.prontidao || '').includes('B'));
+      let eqC = bcms.filter(b => (b.prontidao || '').includes('C'));
+      let eqD = bcms.filter(b => (b.prontidao || '').includes('D'));
+      function formatarMembros(equipe) { return equipe.map(b => `BCP ${b.nomeGuerra.toUpperCase()}`).join(' / ') || '-'; }
+
+      function extrairFeriasEObs(quinzenaInicio, quinzenaFim) {
+        let lista = [], obsUnicasTroca = new Set();
+        bcms.forEach(b => {
+          let diasFerias = [];
+          for(let i=quinzenaInicio; i<=quinzenaFim; i++) {
+            if(i > diasNoMes) break;
+            let dataStr = `${ano}-${mesStr}-${String(i).padStart(2, '0')}`;
+            let fech = buscarFechamentoDia(b, dataStr), af = buscarPlanejadoDia(b, dataStr), oco = buscarOcorridoPlantaoDia(b, dataStr);
+            let val = fech ? fech.valor : (af ? af.valor : '');
+            let obsTexto = fech ? fech.obs : (af ? af.obs : (oco ? oco.obs : ''));
+            if(val === 'F' || val === 'LP') diasFerias.push(i);
+            if(obsTexto && obsTexto.trim() !== '') obsUnicasTroca.add(`Dia ${String(i).padStart(2,'0')}/${mesStr}: ${obsTexto.replace('|', '-')}`);
+          }
+          if(diasFerias.length > 0) lista.push(`${b.nomeGuerra} (Férias: ${diasFerias[0]} a ${diasFerias[diasFerias.length-1]}/${mesStr})`);
+        });
+        obsUnicasTroca.forEach(o => lista.push(o));
+        return lista.join(' | ') || '-';
+      }
+
+      function gerarQuinzena(num, inicio, fim) {
+        let thead = '', diaTurno = '', noiteTurno = '';
+        for(let i=inicio; i<=fim; i++) {
+          if (i > diasNoMes) { thead += `<th></th>`; diaTurno += `<td></td>`; noiteTurno += `<td></td>`; continue; }
+          thead += `<th>${String(i).padStart(2,'0')}</th>`;
+          let eq = getEquipesBcmDoDia(i);
+          diaTurno += `<td contenteditable="true">${eq.dia.replace('Equipe ','')}</td>`;
+          noiteTurno += `<td contenteditable="true">${eq.noite.replace('Equipe ','')}</td>`;
+        }
+        return `
+          <h4 style="text-align:center; font-weight:bold; margin-top:20px; font-size:12px;">${num} QUINZENA DO MÊS DE REFERÊNCIA</h4>
+          <table class="report-table"><tr><th>DIA</th>${thead}</tr><tr><th>DAS 07:30H ÀS 19:30H</th>${diaTurno}</tr><tr><th>DAS 19:30H ÀS 07:30H</th>${noiteTurno}</tr></table>
+          <table class="report-table" style="text-align:left;">
+            <tr><th style="width:15%">EQUIPE A</th><td contenteditable="true">${formatarMembros(eqA)}</td></tr>
+            <tr><th>EQUIPE B</th><td contenteditable="true">${formatarMembros(eqB)}</td></tr>
+            <tr><th>EQUIPE C</th><td contenteditable="true">${formatarMembros(eqC)}</td></tr>
+            <tr><th>EQUIPE D</th><td contenteditable="true">${formatarMembros(eqD)}</td></tr>
+            <tr><th colspan="2" style="background:#f1f5f9; text-align:center;">REGIME 12 X 24 / 12 X 48 DAS 07:30H ÀS 19:30H / 19:30H ÀS 07:30H.</th></tr>
+            <tr><th colspan="2" style="text-align:center;">OBSERVAÇÕES / FÉRIAS / TROCAS DE SERVIÇO</th></tr>
+            <tr><th>REGISTROS</th><td contenteditable="true">${extrairFeriasEObs(inicio, fim)}</td></tr>
+          </table>`;
+      }
+
+      document.getElementById('doc-container').innerHTML = `
+        <div class="a4-sheet portrait">
+          <div style="text-align:center; font-weight:bold; margin-bottom:20px; font-size: 14px; line-height:1.5;">
+            POLÍCIA MILITAR / CORPO DE BOMBEIROS<br>ESTAÇÃO DE BOMBEIROS DE ${estacao.toUpperCase()}<br>ESCALA MENSAL BOMBEIROS CIVIS PÚBLICOS - ${mesStr}/${anoStr}
+          </div>
+          ${gerarQuinzena('PRIMEIRA', 1, 15)}
+          ${gerarQuinzena('SEGUNDA', 16, 31)}
+          <div class="flex justify-around items-end mt-12 text-center text-[10px]">
+            <div contenteditable="true"><div class="border-t border-black w-48 mx-auto mb-1"></div><strong>ELABORADOR</strong><br>LUCAS HENRIQUE GALVÃO LEITE<br>CB PM AUX ADM</div>
+            <div contenteditable="true"><div class="border-t border-black w-48 mx-auto mb-1"></div><strong>CONFERÊNCIA</strong><br>JEAN WILLIAN DE MORAES FONSECA<br>1º TEN PM CMT EB</div>
+          </div>
+        </div>`;
+      document.getElementById('titulo-modal-relatorio').innerHTML = '<i class="fa-solid fa-file-contract text-xl"></i> &nbsp; Relatório BCP Prefeitura';
+      document.getElementById('modal-relatorios').classList.remove('hidden');
+    }
+
+    function imprimirConteudo(idElemento) {
+      const conteudo = document.getElementById(idElemento).innerHTML;
+      const janela = window.open('', '', 'width=1100,height=750');
+      janela.document.write(`
+        <html><head><title>Impressão SIPA</title><style>
+          * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: white; color: black; }
+          .a4-sheet { width: 28.5cm; min-height: 19.5cm; margin: 0 auto; padding: 0.4cm; background: white; page-break-after: always; }
+          .a4-sheet.portrait { width: 20cm; min-height: 28.5cm; }
+          .report-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 9px; text-align: center; }
+          .report-table th, .report-table td { border: 1px solid black; padding: 3px; }
+          .report-table th { font-weight: bold; background-color: #f1f5f9; }
+          .text-left { text-align: left !important; } .font-bold { font-weight: bold !important; }
+          .flex { display: flex; } .justify-around { justify-content: space-around; } .items-end { align-items: flex-end; }
+          .mt-12 { margin-top: 3rem; } .text-center { text-align: center; } .w-48 { width: 12rem; } .mx-auto { margin-left: auto; margin-right: auto; }
+          .mb-1 { margin-bottom: 0.25rem; } .border-t { border-top: 1px solid black; }
+          [contenteditable="true"] { outline: none !important; }
+          @media print { @page { size: A4 landscape; margin: 0.5cm; } @page portrait { size: A4 portrait; margin: 0.8cm; } .portrait { page: portrait; } }
+        </style></head><body>${conteudo}</body></html>`);
+      janela.document.close();
+      janela.focus();
+      setTimeout(() => { janela.print(); janela.close(); }, 600);
+    }
+
+    // =========================================================================
+    // ABA 5: MOTOR DE EXPORTAÇÃO PARA AS 2 PLANILHAS MENSAIS DO 2º SGB
+    // =========================================================================
+    let modeloExportacaoAtivo = 'temporario';
+    let cacheLinhasTemporario = [];
+    let estacaoAnteriorMeta = '';
+
+    function ajustarMetaAutomaticaPorEstacao() {
+      const estacao = document.getElementById('filtro-estacao').value;
+      const inputMeta = document.getElementById('exp-meta-bombeiros');
+      const lblInfo = document.getElementById('lbl-info-meta');
+      if (!inputMeta) return;
+
+      if (estacao !== estacaoAnteriorMeta) {
+        estacaoAnteriorMeta = estacao;
+        inputMeta.value = (estacao.toUpperCase() === 'IBIÚNA' || estacao.toUpperCase() === 'IBIUNA') ? 3 : 6;
+      }
+
+      if (estacao.toUpperCase() === 'PORTO FELIZ') {
+        lblInfo.textContent = `(Porto Feliz: 2 turnos de 12h — Meta ${inputMeta.value} no Dia e ${inputMeta.value} na Noite)`;
+      } else if (estacao.toUpperCase() === 'IBIÚNA' || estacao.toUpperCase() === 'IBIUNA') {
+        lblInfo.textContent = `(Ibiúna: Turno 24h — Meta ${inputMeta.value} bombeiros)`;
+      } else {
+        lblInfo.textContent = `(${estacao}: Turno 24h — Meta ${inputMeta.value} bombeiros)`;
+      }
+    }
+
+    function alternarModeloExportacao(modelo) {
+      modeloExportacaoAtivo = modelo;
+      const btnTemp = document.getElementById('btn-mod-temporario');
+      const btnQuin = document.getElementById('btn-mod-quinzenal');
+      const ctrlTemp = document.getElementById('painel-ctrl-temporario');
+      const ctrlQuin = document.getElementById('painel-ctrl-quinzenal');
+
+      if (modelo === 'temporario') {
+        btnTemp.className = "px-3 py-1.5 rounded bg-white text-pmesp-blue shadow-sm transition";
+        btnQuin.className = "px-3 py-1.5 rounded text-slate-600 hover:text-slate-900 transition";
+        ctrlTemp.classList.remove('hidden'); ctrlTemp.classList.add('flex');
+        ctrlQuin.classList.add('hidden'); ctrlQuin.classList.remove('flex');
+      } else {
+        btnQuin.className = "px-3 py-1.5 rounded bg-white text-pmesp-blue shadow-sm transition";
+        btnTemp.className = "px-3 py-1.5 rounded text-slate-600 hover:text-slate-900 transition";
+        ctrlQuin.classList.remove('hidden'); ctrlQuin.classList.add('flex');
+        ctrlTemp.classList.add('hidden'); ctrlTemp.classList.remove('flex');
+      }
+      renderExportacaoPlanilhas();
+    }
+
+    function obterSituacaoConsolidadaNoDia(ef, ano, mes, mesStr, dia) {
+      const dataStr = `${ano}-${mesStr}-${String(dia).padStart(2, '0')}`;
+      const padrao = calcularEscalaPadrao(ef, ano, mes, dia);
+      const fech = buscarFechamentoDia(ef, dataStr);
+      const oco = buscarOcorridoPlantaoDia(ef, dataStr);
+      const afa = buscarPlanejadoDia(ef, dataStr);
+
+      let siglaFinal = padrao.sigla, obsFinal = '';
+      if (fech) {
+        siglaFinal = fech.valor === 'OBS' ? padrao.sigla : fech.valor;
+        obsFinal = fech.obs || '';
+      } else if (oco) {
+        if (oco.valor === 'FALTA') siglaFinal = 'FS';
+        else if (oco.valor === 'FOLGA' || oco.valor === 'TROCA') siglaFinal = 'A';
+        else if (oco.valor === 'EXTRA') siglaFinal = (ef.tipo === 'Militar' ? '3' : 'D');
+        else siglaFinal = oco.valor;
+        obsFinal = `${oco.substituto ? 'Subst: ' + oco.substituto + ' ' : ''}${oco.obs || ''}`.trim();
+      } else if (afa) {
+        siglaFinal = afa.valor === 'OBS' ? padrao.sigla : afa.valor;
+        obsFinal = afa.obs || '';
+      }
+      return { sigla: siglaFinal, padraoSigla: padrao.sigla, obs: obsFinal, dataStr };
+    }
+
+    function formatarNomeCurtoPlanilha(ef) {
+      if (!ef) return '';
+      if (ef.tipo === 'BCP' || ef.tipo === 'BCM') {
+        const prefixo = (ef.graduacao || 'BCP').toUpperCase().includes('BPC') ? 'BPC' : 'BCP';
+        return `${prefixo} ${(ef.nomeGuerra || '').toUpperCase()}`.trim();
+      }
+      const gradCurta = (ef.graduacao || '').toUpperCase().replace(/\s*PM\s*$/i, '').trim();
+      return `${gradCurta} ${(ef.nomeGuerra || '').toUpperCase()}`.trim();
+    }
+
+    function renderExportacaoPlanilhas() {
+      if (modeloExportacaoAtivo === 'temporario') renderPreviaEfetivoTemporario();
+      else renderPreviaEscalaQuinzenal();
+    }
+
+    function renderPreviaEfetivoTemporario() {
+      const container = document.getElementById('container-previa-exportacao');
+      const mesValor = document.getElementById('filtro-mes').value;
+      let estacao = document.getElementById('filtro-estacao').value;
+      if (estacao === 'Todas') estacao = 'Porto Feliz';
+      if (!mesValor) return;
+
+      const [anoStr, mesStr] = mesValor.split('-');
+      const ano = parseInt(anoStr, 10), mes = parseInt(mesStr, 10), diasNoMes = new Date(ano, mes, 0).getDate();
+      const isPortoFeliz = (estacao.toUpperCase() === 'PORTO FELIZ');
+      const meta = parseInt(document.getElementById('exp-meta-bombeiros').value || (estacao.toUpperCase().includes('IBI') ? '3' : '6'), 10);
+
+      const efetivoEstacao = (appState.efetivo || []).filter(e => 
+        (e.estacao || '').toUpperCase() === estacao.toUpperCase() &&
+        e.prontidao !== 'Expediente' && e.prontidao !== 'Administrativo' && !ehGraduacaoTenente(e.graduacao)
+      );
+      const militaresOp = efetivoEstacao.filter(e => e.tipo === 'Militar');
+      const municipaisOp = efetivoEstacao.filter(e => e.tipo === 'BCP' || e.tipo === 'BCM');
+
+      cacheLinhasTemporario = [];
+      let htmlRows = '';
+
+      for (let d = 1; d <= diasNoMes; d++) {
+        let milServico = [], bcpDia = [], bcpNoite = [], feriasLp = [], folgaMensal = [], obsDia = [];
+
+        militaresOp.forEach(ef => {
+          const sit = obterSituacaoConsolidadaNoDia(ef, ano, mes, mesStr, d);
+          const nomeFmt = formatarNomeCurtoPlanilha(ef);
+          if (['3', '2', '1'].includes(sit.sigla)) milServico.push(nomeFmt);
+          else if (['F', 'LP'].includes(sit.sigla)) feriasLp.push(nomeFmt);
+          else if (['A', 'FS'].includes(sit.sigla) && sit.padraoSigla === '3') {
+            if ((sit.obs || '').toUpperCase().match(/EAP|LTS|CURSO/)) feriasLp.push(nomeFmt);
+            else folgaMensal.push(nomeFmt);
+          }
+          if (sit.obs && sit.obs.includes('TROCA')) obsDia.push(sit.obs.replace('|', '-'));
+        });
+
+        const equipesBcp = getEquipesBcmDoDia(d);
+        municipaisOp.forEach(ef => {
+          const sit = obterSituacaoConsolidadaNoDia(ef, ano, mes, mesStr, d);
+          const nomeFmt = formatarNomeCurtoPlanilha(ef);
+          const pront = (ef.prontidao || '');
+
+          if (['F', 'LP'].includes(sit.sigla)) { feriasLp.push(nomeFmt); return; }
+          if (['A', 'FS'].includes(sit.sigla) && (pront.includes(equipesBcp.dia) || pront.includes(equipesBcp.noite))) { folgaMensal.push(nomeFmt); return; }
+
+          if (isPortoFeliz) {
+            if (pront.includes(equipesBcp.dia) || sit.sigla === 'D') bcpDia.push(nomeFmt);
+            if (pront.includes(equipesBcp.noite) || sit.sigla === 'N') bcpNoite.push(nomeFmt);
+          } else if (pront.includes(equipesBcp.dia) || pront.includes(equipesBcp.noite) || ['D', 'N', 'S'].includes(sit.sigla)) {
+            milServico.push(nomeFmt);
+          }
+          if (sit.obs) obsDia.push(sit.obs.replace('|', '-'));
+        });
+
+        const qtdMil = milServico.length, totalDia = qtdMil + bcpDia.length, totalNoite = qtdMil + bcpNoite.length;
+        const totalAfast = feriasLp.length + folgaMensal.length;
+        const necDiaStr = (meta - totalDia > 0) ? String(meta - totalDia) : '---';
+        const necNoiteStr = (meta - totalNoite > 0) ? String(meta - totalNoite) : '---';
+        const necUnicoStr = (meta - qtdMil > 0) ? String(meta - qtdMil) : '---';
+        const obsUnicaStr = [...new Set(obsDia)].join('; ');
+
+        cacheLinhasTemporario.push({ dia: d, isPortoFeliz, milServico, bcpDia, bcpNoite, feriasLp, folgaMensal, qtdMil, totalDia, totalNoite, totalAfast, necDiaStr, necNoiteStr, necUnicoStr, obsUnicaStr });
+
+        htmlRows += isPortoFeliz ? `
+          <tr class="hover:bg-slate-50 border-b text-[11px]">
+            <td class="p-2 border-r font-black text-center bg-slate-100">${d}</td>
+            <td class="p-2 border-r font-semibold text-pmesp-blue">${milServico.join(', ') || '-'}</td>
+            <td class="p-2 border-r text-emerald-800 font-semibold">${bcpDia.join(', ') || '-'}</td>
+            <td class="p-2 border-r text-indigo-800 font-semibold">${bcpNoite.join(', ') || '-'}</td>
+            <td class="p-2 border-r text-orange-800">${feriasLp.join(', ') || '-'}</td>
+            <td class="p-2 border-r text-red-700 font-bold">${folgaMensal.join(', ') || '-'}</td>
+            <td class="p-2 border-r text-center font-bold bg-slate-50">${qtdMil}</td>
+            <td class="p-2 border-r text-center font-bold bg-emerald-50">${totalDia}</td>
+            <td class="p-2 border-r text-center font-bold bg-indigo-50">${totalNoite}</td>
+            <td class="p-2 border-r text-center font-bold text-orange-700">${totalAfast}</td>
+            <td class="p-2 border-r text-center font-black ${necDiaStr !== '---' ? 'bg-red-100 text-red-700' : 'text-slate-400'}">${necDiaStr}</td>
+            <td class="p-2 border-r text-center font-black ${necNoiteStr !== '---' ? 'bg-red-100 text-red-700' : 'text-slate-400'}">${necNoiteStr}</td>
+            <td class="p-2 text-[10px] text-slate-500">${obsUnicaStr}</td>
+          </tr>` : `
+          <tr class="hover:bg-slate-50 border-b text-[11px]">
+            <td class="p-2 border-r font-black text-center bg-slate-100">${d}</td>
+            <td class="p-2 border-r font-semibold text-pmesp-blue">${milServico.join(', ') || '-'}</td>
+            <td class="p-2 border-r text-orange-800">${feriasLp.join(', ') || '-'}</td>
+            <td class="p-2 border-r text-red-700 font-bold">${folgaMensal.join(', ') || '-'}</td>
+            <td class="p-2 border-r text-center font-bold bg-slate-50">${qtdMil}</td>
+            <td class="p-2 border-r text-center font-bold text-orange-700">${totalAfast}</td>
+            <td class="p-2 border-r text-center font-black ${necUnicoStr !== '---' ? 'bg-red-100 text-red-700' : 'text-slate-400'}">${necUnicoStr}</td>
+            <td class="p-2 text-[10px] text-slate-500">${obsUnicaStr}</td>
+          </tr>`;
+      }
+
+      container.innerHTML = isPortoFeliz ? `
+        <div class="mb-2 text-xs font-bold text-pmesp-blue">Prévia da Aba: <span class="uppercase underline">${estacao}</span> (2 Turnos: 07h30–19h30 e 19h30–07h30 | Meta = ${meta} por turno)</div>
+        <table class="w-full text-left border-collapse border whitespace-nowrap">
+          <thead class="bg-slate-100 text-slate-700 text-[10px] uppercase border-b sticky top-0">
+            <tr><th class="p-2 border-r text-center">Dia</th><th class="p-2 border-r">Militares (Cols. B–F)</th><th class="p-2 border-r bg-emerald-50">BCP Dia (Cols. G–I)</th><th class="p-2 border-r bg-indigo-50">BCP Noite (Cols. J–L)</th><th class="p-2 border-r bg-orange-50">Férias / LP (Cols. M–Q)</th><th class="p-2 border-r bg-red-50">Folga Mensal (Cols. R–S)</th><th class="p-2 border-r text-center">Mil.</th><th class="p-2 border-r text-center">Dia</th><th class="p-2 border-r text-center">Noite</th><th class="p-2 border-r text-center">Afast.</th><th class="p-2 border-r text-center bg-amber-100">Nec. Dia</th><th class="p-2 border-r text-center bg-amber-100">Nec. Noite</th><th class="p-2">Obs</th></tr>
+          </thead>
+          <tbody>${htmlRows}</tbody>
+        </table>` : `
+        <div class="mb-2 text-xs font-bold text-pmesp-blue">Prévia da Aba: <span class="uppercase underline">${estacao}</span> (Turno 24h | Meta = ${meta} bombeiros)</div>
+        <table class="w-full text-left border-collapse border whitespace-nowrap">
+          <thead class="bg-slate-100 text-slate-700 text-[10px] uppercase border-b sticky top-0">
+            <tr><th class="p-2 border-r text-center">Dia</th><th class="p-2 border-r">Militares de Serviço (Cols. B–K)</th><th class="p-2 border-r bg-orange-50">Férias / LP / EAP (Cols. L–P)</th><th class="p-2 border-r bg-red-50">Folga Mensal (Cols. Q–R)</th><th class="p-2 border-r text-center">Serviço</th><th class="p-2 border-r text-center">Afastamentos</th><th class="p-2 border-r text-center bg-amber-100">Necessidade DEJEM</th><th class="p-2">Observações</th></tr>
+          </thead>
+          <tbody>${htmlRows}</tbody>
+        </table>`;
+    }
+
+    function padArrayCols(arr, tam) {
+      return Array.from({ length: tam }, (_, i) => arr[i] || '');
+    }
+
+    function montarLinhasTSVEfetivoTemporario(modo) {
+      const intercalar = document.getElementById('chk-intercalar-linhas').checked;
+      let linhasOut = [];
+      cacheLinhasTemporario.forEach(item => {
+        let cols = [];
+        if (item.isPortoFeliz) {
+          const cMil = padArrayCols(item.milServico, 5), cDia = padArrayCols(item.bcpDia, 3), cNoite = padArrayCols(item.bcpNoite, 3), cFer = padArrayCols(item.feriasLp, 5), cFol = padArrayCols(item.folgaMensal, 2);
+          if (modo === 'nomes') cols = [...cMil, ...cDia, ...cNoite];
+          else if (modo === 'afastamentos') cols = [...cFer, ...cFol];
+          else cols = [item.dia, ...cMil, ...cDia, ...cNoite, ...cFer, ...cFol, '', '', '', '', '', '', item.qtdMil, item.totalDia, item.totalNoite, item.totalAfast, 0, item.necDiaStr, item.necNoiteStr, item.obsUnicaStr];
+        } else {
+          const cMil = padArrayCols(item.milServico, 10), cFer = padArrayCols(item.feriasLp, 5), cFol = padArrayCols(item.folgaMensal, 2);
+          if (modo === 'nomes') cols = [...cMil];
+          else if (modo === 'afastamentos') cols = [...cFer, ...cFol];
+          else cols = [item.dia, ...cMil, ...cFer, ...cFol, '', '', '', '', '', '', item.qtdMil, item.totalAfast, 0, item.necUnicoStr, item.obsUnicaStr];
+        }
+        linhasOut.push(cols.join('\t'));
+        if (intercalar) linhasOut.push(new Array(cols.length).fill('').join('\t'));
+      });
+      return linhasOut.join('\n');
+    }
+
+    function copiarTextoCompativelGoogleSites(texto, mensagemSucesso) {
+      const ta = document.createElement('textarea');
+      ta.value = texto;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      let copiou = false;
+      try { copiou = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+
+      if (copiou) {
+        mostrarAlerta(mensagemSucesso);
+      } else {
+        const w = window.open('', '', 'width=720,height=460');
+        w.document.write(
+          '<p style="font-family:Arial,sans-serif;font-size:13px;margin:10px;"><strong>Pressione Ctrl+C para copiar a tabela gerada:</strong></p>' +
+          '<textarea id="box-tsv" style="width:98%;height:360px;font-family:monospace;font-size:11px;">' + texto.replace(/</g, '&lt;') + '</textarea>' +
+          '<script>var b=document.getElementById("box-tsv");b.focus();b.select();<\/script>'
+        );
+        w.document.close();
+      }
+    }
+
+    function copiarEfetivoTemporarioTSV(modo) {
+      renderPreviaEfetivoTemporario();
+      if (!cacheLinhasTemporario || cacheLinhasTemporario.length === 0) {
+        mostrarAlerta("Nenhum dado gerado para este filtro. Verifique se o mês e a estação têm efetivo cadastrado.");
+        return;
+      }
+      const tsv = montarLinhasTSVEfetivoTemporario(modo);
+      copiarTextoCompativelGoogleSites(tsv, "Dados copiados! Abra a planilha do Google Sheets, clique na célula inicial do Dia 1 e pressione Ctrl+Shift+V (ou Ctrl+V).");
+    }
+
+    function baixarCSVEfetivoTemporario() {
+      renderPreviaEfetivoTemporario();
+      if (!cacheLinhasTemporario || cacheLinhasTemporario.length === 0) {
+        mostrarAlerta("Nenhum dado gerado para baixar.");
+        return;
+      }
+      const csv = montarLinhasTSVEfetivoTemporario('completo').split('\n').map(l => l.split('\t').map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' }));
+      a.download = `Efetivo_Temporario_${document.getElementById('filtro-estacao').value}_${document.getElementById('filtro-mes').value}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function renderPreviaEscalaQuinzenal() {
+      const container = document.getElementById('container-previa-exportacao');
+      const mesValor = document.getElementById('filtro-mes').value;
+      let estacao = document.getElementById('filtro-estacao').value;
+      if (estacao === 'Todas') estacao = 'Porto Feliz';
+      const quinzena = document.getElementById('exp-quinzena').value;
+      if (!mesValor) return;
+
+      const [anoStr, mesStr] = mesValor.split('-');
+      const ano = parseInt(anoStr, 10), mes = parseInt(mesStr, 10), diasNoMes = new Date(ano, mes, 0).getDate();
+      const diaIni = quinzena === '1' ? 1 : 16, diaFim = quinzena === '1' ? 15 : diasNoMes;
+      const nomeMesExtenso = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'][mes - 1];
+      const dataRefQuinzena = `${ano}-${mesStr}-${String(diaIni).padStart(2, '0')}`;
+
+      const efetivoEst = (appState.efetivo || []).filter(e => (e.estacao || '').toUpperCase() === estacao.toUpperCase());
+      const militares = efetivoEst.filter(e => {
+        const pr = obterProntidaoEfetivaNoDia(e, dataRefQuinzena);
+        return e.tipo === 'Militar' && !ehGraduacaoTenente(e.graduacao) && pr !== 'Expediente' && pr !== 'Administrativo';
+      });
+      const bcps = efetivoEst.filter(e => e.tipo === 'BCP' || e.tipo === 'BCM');
+
+      const diasPorProntidao = { 'AZUL': [], 'VERDE': [], 'AMARELA': [] };
+      for (let d = diaIni; d <= diaFim; d++) {
+        const diff = Math.floor((new Date(ano, mes - 1, d) - new Date(2026, 10, 6)) / 86400000);
+        let ciclo = diff % 3; if (ciclo < 0) ciclo += 3;
+        diasPorProntidao[['VERDE', 'AMARELA', 'AZUL'][ciclo]].push(String(d).padStart(2, '0'));
+      }
+
+      const milPorPront = {
+        'AZUL': militares.filter(m => obterProntidaoEfetivaNoDia(m, dataRefQuinzena).toUpperCase() === 'AZUL'),
+        'VERDE': militares.filter(m => obterProntidaoEfetivaNoDia(m, dataRefQuinzena).toUpperCase() === 'VERDE'),
+        'AMARELA': militares.filter(m => obterProntidaoEfetivaNoDia(m, dataRefQuinzena).toUpperCase() === 'AMARELA')
+      };
+      const fmtMilCompleto = (m) => m ? `${m.graduacao} ${m.re || ''} ${m.nomeGuerra}`.replace(/\s+/g, ' ').trim() : '';
+
+      let folgasMilHtml = '', afastMilHtml = '';
+      militares.forEach(m => {
+        const prAtual = obterProntidaoEfetivaNoDia(m, dataRefQuinzena).toUpperCase();
+        for (let d = diaIni; d <= diaFim; d++) {
+          const sit = obterSituacaoConsolidadaNoDia(m, ano, mes, mesStr, d);
+          if (sit.sigla === 'A' && sit.padraoSigla === '3') {
+            folgasMilHtml += `<tr><td contenteditable="true" class="border p-1.5 font-bold">${prAtual}</td><td contenteditable="true" class="border p-1.5">${fmtMilCompleto(m)}</td><td contenteditable="true" class="border p-1.5 text-center">${String(d).padStart(2, '0')}/${mesStr}/${ano}</td><td contenteditable="true" class="border p-1.5">${sit.obs || 'FOLGA MENSAL CONFORME BG 101/23'}</td></tr>`;
+          }
+        }
+        let diasAfast = [], tipoAf = '';
+        for (let d = 1; d <= diasNoMes; d++) {
+          const sit = obterSituacaoConsolidadaNoDia(m, ano, mes, mesStr, d);
+          if (['F', 'LP'].includes(sit.sigla)) { diasAfast.push(d); tipoAf = sit.sigla === 'F' ? 'FÉRIAS' : 'LICENÇA PRÊMIO'; }
+        }
+        if (diasAfast.some(d => d >= diaIni && d <= diaFim)) {
+          afastMilHtml += `<tr><td contenteditable="true" class="border p-1.5 font-bold">${prAtual}</td><td contenteditable="true" class="border p-1.5">${fmtMilCompleto(m)}</td><td contenteditable="true" class="border p-1.5 text-center">${tipoAf}</td><td contenteditable="true" class="border p-1.5 text-center">${String(diasAfast[0]).padStart(2, '0')}/${mesStr}/${ano}</td><td contenteditable="true" class="border p-1.5 text-center">${String(diasAfast[diasAfast.length - 1]).padStart(2, '0')}/${mesStr}/${ano}</td></tr>`;
+        }
+      });
+
+      let bcpEscalaHtml = '', bcpOutrasHtml = '', bcpAfastHtml = '';
+      ['A', 'B', 'C', 'D'].forEach(letraEq => {
+        let diasDia = [], diasNoite = [];
+        for (let d = diaIni; d <= diaFim; d++) {
+          const eqs = getEquipesBcmDoDia(d);
+          if (eqs.dia === `Equipe ${letraEq}`) diasDia.push(String(d).padStart(2, '0'));
+          if (eqs.noite === `Equipe ${letraEq}`) diasNoite.push(String(d).padStart(2, '0'));
+        }
+        const membrosEq = bcps.filter(b => {
+          const prB = obterProntidaoEfetivaNoDia(b, dataRefQuinzena).toUpperCase();
+          return prB.includes(`EQUIPE ${letraEq}`) || prB === letraEq;
+        });
+        membrosEq.forEach(b => {
+          const nomeBcp = `BPM ${b.re || b.cpf || ''} ${b.nomeGuerra}`.replace(/\s+/g, ' ').trim();
+          bcpEscalaHtml += `<tr><td contenteditable="true" class="border p-1.5 text-center font-bold">${letraEq}</td><td contenteditable="true" class="border p-1.5">${nomeBcp}</td><td contenteditable="true" class="border p-1.5 text-center">${diasDia.join(', ')}</td><td contenteditable="true" class="border p-1.5 text-center">${diasNoite.join(', ')}</td><td contenteditable="true" class="border p-1.5"></td></tr>`;
+          for (let d = diaIni; d <= diaFim; d++) {
+            const sit = obterSituacaoConsolidadaNoDia(b, ano, mes, mesStr, d);
+            if (sit.sigla === 'A' || sit.obs) {
+              bcpOutrasHtml += `<tr><td contenteditable="true" class="border p-1.5 text-center font-bold">${letraEq}</td><td contenteditable="true" class="border p-1.5">${nomeBcp}</td><td contenteditable="true" class="border p-1.5 text-center">${String(d).padStart(2, '0')}/${mesStr}/${ano}</td><td contenteditable="true" class="border p-1.5">${sit.obs || 'FOLGA MENSAL'}</td></tr>`;
+            }
+          }
+          let diasFerBcp = [];
+          for (let d = 1; d <= diasNoMes; d++) {
+            const sit = obterSituacaoConsolidadaNoDia(b, ano, mes, mesStr, d);
+            if (['F', 'LP'].includes(sit.sigla)) diasFerBcp.push(d);
+          }
+          if (diasFerBcp.some(d => d >= diaIni && d <= diaFim)) {
+            bcpAfastHtml += `<tr><td contenteditable="true" class="border p-1.5 text-center font-bold">${letraEq}</td><td contenteditable="true" class="border p-1.5">${nomeBcp}</td><td contenteditable="true" class="border p-1.5 text-center">FÉRIAS</td><td contenteditable="true" class="border p-1.5 text-center">${String(diasFerBcp[0]).padStart(2, '0')}/${mesStr}/${ano}</td><td contenteditable="true" class="border p-1.5 text-center">${String(diasFerBcp[diasFerBcp.length - 1]).padStart(2, '0')}/${mesStr}/${ano}</td></tr>`;
+          }
+        });
+      });
+
+      container.innerHTML = `
+        <div id="area-escala-quinzenal-export" class="space-y-4 text-xs p-2">
+          <table class="w-full border-collapse border text-left">
+            <thead>
+              <tr class="bg-slate-200 font-black text-center text-sm"><th colspan="5" contenteditable="true" class="border p-2">ESCALA OPERACIONAL - ${quinzena}ª QUINZENA DE ${nomeMesExtenso} / ${ano} — EB ${estacao.toUpperCase()}</th></tr>
+              <tr class="bg-slate-100 font-bold text-center"><th colspan="5" contenteditable="true" class="border p-1.5">SERVIÇO DE PRONTIDÃO - Das 07h30min às 07h30min do dia seguinte</th></tr>
+            </thead>
+            <tbody>
+              <tr class="font-bold bg-slate-50"><td class="border p-1.5" colspan="2">PRONTIDÃO</td><td contenteditable="true" class="border p-1.5 text-blue-800">AZUL (${fmtMilCompleto(milPorPront['AZUL'][0])})</td><td contenteditable="true" class="border p-1.5 text-green-800">VERDE (${fmtMilCompleto(milPorPront['VERDE'][0])})</td><td contenteditable="true" class="border p-1.5 text-amber-800">AMARELA (${fmtMilCompleto(milPorPront['AMARELA'][0])})</td></tr>
+              <tr><td class="border p-1.5 font-bold" colspan="2">DIAS DE SERVIÇO</td><td contenteditable="true" class="border p-1.5 font-bold text-center">${diasPorProntidao['AZUL'].join(', ')}</td><td contenteditable="true" class="border p-1.5 font-bold text-center">${diasPorProntidao['VERDE'].join(', ')}</td><td contenteditable="true" class="border p-1.5 font-bold text-center">${diasPorProntidao['AMARELA'].join(', ')}</td></tr>
+              <tr class="bg-slate-100 font-bold"><td class="border p-1.5">UNIDADE DE SERVIÇO</td><td class="border p-1.5">FUNÇÃO</td><td class="border p-1.5">GUARNIÇÃO AZUL</td><td class="border p-1.5">GUARNIÇÃO VERDE</td><td class="border p-1.5">GUARNIÇÃO AMARELA</td></tr>
+              <tr><td contenteditable="true" class="border p-1.5 font-bold" rowspan="3">VTR INCÊNDIO (ABL/ABT)</td><td class="border p-1.5 font-semibold">Cmt</td><td contenteditable="true" class="border p-1.5">${fmtMilCompleto(milPorPront['AZUL'][0])}</td><td contenteditable="true" class="border p-1.5">${fmtMilCompleto(milPorPront['VERDE'][0])}</td><td contenteditable="true" class="border p-1.5">${fmtMilCompleto(milPorPront['AMARELA'][0])}</td></tr>
+              <tr><td class="border p-1.5 font-semibold">Motorista</td><td contenteditable="true" class="border p-1.5">${fmtMilCompleto(milPorPront['AZUL'][1])}</td><td contenteditable="true" class="border p-1.5">${fmtMilCompleto(milPorPront['VERDE'][1])}</td><td contenteditable="true" class="border p-1.5">${fmtMilCompleto(milPorPront['AMARELA'][1])}</td></tr>
+              <tr><td class="border p-1.5 font-semibold">Auxiliar</td><td contenteditable="true" class="border p-1.5">${fmtMilCompleto(milPorPront['AZUL'][2])}</td><td contenteditable="true" class="border p-1.5">${fmtMilCompleto(milPorPront['VERDE'][2])}</td><td contenteditable="true" class="border p-1.5">${fmtMilCompleto(milPorPront['AMARELA'][2])}</td></tr>
+              <tr><td contenteditable="true" class="border p-1.5 font-bold" rowspan="2">UNIDADE RESGATE (UR)</td><td class="border p-1.5 font-semibold">Cmt</td><td contenteditable="true" class="border p-1.5">${fmtMilCompleto(milPorPront['AZUL'][3])}</td><td contenteditable="true" class="border p-1.5">${fmtMilCompleto(milPorPront['VERDE'][3])}</td><td contenteditable="true" class="border p-1.5">${fmtMilCompleto(milPorPront['AMARELA'][3])}</td></tr>
+              <tr><td class="border p-1.5 font-semibold">Motorista / Aux</td><td contenteditable="true" class="border p-1.5">${fmtMilCompleto(milPorPront['AZUL'][4])}</td><td contenteditable="true" class="border p-1.5">${fmtMilCompleto(milPorPront['VERDE'][4])}</td><td contenteditable="true" class="border p-1.5">${fmtMilCompleto(milPorPront['AMARELA'][4])}</td></tr>
+            </tbody>
+          </table>
+          <table class="w-full border-collapse border text-left">
+            <thead><tr class="bg-slate-200 font-bold"><th colspan="4" class="border p-1.5 text-center">FOLGAS MENSAIS / ALTERAÇÕES PONTUAIS (MILITARES)</th></tr><tr class="bg-slate-100 font-bold"><th class="border p-1.5">PRONTIDÃO</th><th class="border p-1.5">MILITAR</th><th class="border p-1.5 text-center">DATA</th><th class="border p-1.5">DESCRIÇÃO</th></tr></thead>
+            <tbody>${folgasMilHtml || '<tr><td colspan="4" contenteditable="true" class="border p-2 text-center text-slate-400">Sem folgas mensais lançadas nesta quinzena.</td></tr>'}</tbody>
+          </table>
+          <table class="w-full border-collapse border text-left">
+            <thead><tr class="bg-slate-200 font-bold"><th colspan="5" class="border p-1.5 text-center">AFASTAMENTOS (MILITARES)</th></tr><tr class="bg-slate-100 font-bold"><th class="border p-1.5">PRONT./EQUIPE</th><th class="border p-1.5">NOME (COM POSTO/GRAD./RE)</th><th class="border p-1.5 text-center">TIPO</th><th class="border p-1.5 text-center">INÍCIO</th><th class="border p-1.5 text-center">TÉRMINO</th></tr></thead>
+            <tbody>${afastMilHtml || '<tr><td colspan="5" contenteditable="true" class="border p-2 text-center text-slate-400">Sem férias ou licenças nesta quinzena.</td></tr>'}</tbody>
+          </table>
+          ${bcps.length > 0 ? `
+            <table class="w-full border-collapse border text-left">
+              <thead><tr class="bg-slate-200 font-bold"><th colspan="5" class="border p-1.5 text-center">BOMBEIROS MUNICIPAIS (ESCALA 12x24 / 12x48)</th></tr><tr class="bg-slate-100 font-bold"><th class="border p-1.5 text-center">EQUIPE</th><th class="border p-1.5">BCP</th><th class="border p-1.5 text-center">12x24 (07h30–19h30)</th><th class="border p-1.5 text-center">12x48 (19h30–07h30)</th><th class="border p-1.5">OBSERVAÇÃO</th></tr></thead>
+              <tbody>${bcpEscalaHtml}</tbody>
+            </table>
+            <table class="w-full border-collapse border text-left">
+              <thead><tr class="bg-slate-200 font-bold"><th colspan="4" class="border p-1.5 text-center">OUTRAS ESCALAS / FOLGAS (MUNICIPAIS)</th></tr><tr class="bg-slate-100 font-bold"><th class="border p-1.5 text-center">EQUIPE</th><th class="border p-1.5">BCP</th><th class="border p-1.5 text-center">DATA</th><th class="border p-1.5">DESCRIÇÃO</th></tr></thead>
+              <tbody>${bcpOutrasHtml || '<tr><td colspan="4" contenteditable="true" class="border p-2 text-center text-slate-400">-</td></tr>'}</tbody>
+            </table>
+            <table class="w-full border-collapse border text-left">
+              <thead><tr class="bg-slate-200 font-bold"><th colspan="5" class="border p-1.5 text-center">AFASTAMENTOS (MUNICIPAIS)</th></tr><tr class="bg-slate-100 font-bold"><th class="border p-1.5 text-center">EQUIPE</th><th class="border p-1.5">BCP</th><th class="border p-1.5 text-center">TIPO</th><th class="border p-1.5 text-center">INÍCIO</th><th class="border p-1.5 text-center">TÉRMINO</th></tr></thead>
+              <tbody>${bcpAfastHtml || '<tr><td colspan="5" contenteditable="true" class="border p-2 text-center text-slate-400">-</td></tr>'}</tbody>
+            </table>` : ''}
+        </div>`;
+    }
+
+    function copiarEscalaQuinzenalTSV() {
+      renderPreviaEscalaQuinzenal();
+      const area = document.getElementById('area-escala-quinzenal-export');
+      if (!area) return;
+      let linhasTSV = [];
+      area.querySelectorAll('table').forEach(tb => {
+        tb.querySelectorAll('tr').forEach(tr => {
+          linhasTSV.push(Array.from(tr.querySelectorAll('th, td')).map(c => c.innerText.replace(/\s+/g, ' ').trim()).join('\t'));
+        });
+        linhasTSV.push('');
+      });
+      copiarTextoCompativelGoogleSites(linhasTSV.join('\n'), "Escala Operacional Quinzenal copiada! Abra o Google Sheets e pressione Ctrl+V.");
+    }
+
+    function imprimirEscalaQuinzenal() {
+      renderPreviaEscalaQuinzenal();
+      const area = document.getElementById('area-escala-quinzenal-export');
+      if (!area) return;
+      document.getElementById('doc-container').innerHTML = `<div class="a4-sheet portrait">${area.innerHTML}</div>`;
+      document.getElementById('titulo-modal-relatorio').innerHTML = '<i class="fa-solid fa-file-excel text-xl"></i> &nbsp; Escala Operacional Quinzenal (703152102)';
+      document.getElementById('modal-relatorios').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>

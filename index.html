@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Home - 2º SGB</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { pmesp: { blue: '#0B2265', darkblue: '#06133B', red: '#CC0000' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } }
+    }
+  </script>
+  <style>
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
+
+  <!-- ================= TELA DE LOGIN ================= -->
+  <div id="tela-login" class="fixed inset-0 z-[200] bg-slate-100 flex items-center justify-center p-4 transition-opacity duration-300">
+    <div class="bg-white max-w-md w-full rounded-2xl shadow-2xl overflow-hidden border-t-4 border-pmesp-red">
+      <div class="bg-pmesp-blue p-8 text-center">
+        <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/20">
+          <i class="fa-solid fa-fire-extinguisher text-amber-400 text-3xl"></i>
+        </div>
+        <h1 class="text-2xl font-black text-white tracking-tight">PORTAL 2º SGB</h1>
+        <p class="text-amber-400 text-sm font-bold mt-1">Central de Links, Avisos e Agenda</p>
+      </div>
+      <div class="p-8">
+        <form id="form-login" onsubmit="fazerLogin(event)" class="space-y-6">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Usuário</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fa-solid fa-user text-slate-400"></i></div>
+              <input type="text" id="login-usuario" required class="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-lg text-sm focus:border-pmesp-blue outline-none transition" placeholder="Digite seu usuário">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Senha</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fa-solid fa-lock text-slate-400"></i></div>
+              <input type="password" id="login-senha" required class="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-lg text-sm focus:border-pmesp-blue outline-none transition" placeholder="••••••••">
+            </div>
+          </div>
+          <div id="msg-erro" class="hidden bg-red-50 text-red-600 text-xs font-bold p-3 rounded border border-red-200 text-center">
+            Usuário ou senha incorretos!
+          </div>
+          <button type="submit" class="w-full bg-pmesp-blue text-white font-bold py-3 rounded-lg shadow-lg hover:bg-pmesp-darkblue transition hover:scale-[1.02]">
+            Acessar Portal
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SISTEMA PRINCIPAL ================= -->
+  <div id="tela-sistema" class="hidden flex-col min-h-screen">
+    
+    <!-- CABEÇALHO -->
+    <header class="bg-pmesp-blue text-white shadow-md border-b-4 border-pmesp-red sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center border border-white/20">
+            <i class="fa-solid fa-house-signal text-amber-400 text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-sm font-extrabold tracking-tight">PORTAL OPERACIONAL E ADMINISTRATIVO — 2º SGB</h1>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-amber-400 font-semibold" id="lbl-data-hoje">Carregando data...</span>
+              <span id="badge-nivel" class="text-[10px] uppercase bg-white/20 px-2 py-0.5 rounded font-bold"></span>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <div id="status-nuvem" class="text-white px-3 py-1.5 rounded text-xs font-bold flex items-center gap-2 bg-white/10">
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Sincronizando...
+          </div>
+          <button onclick="carregarDadosNuvem()" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-1.5" title="Atualizar Dados">
+            <i class="fa-solid fa-rotate"></i> <span class="hidden sm:inline">Atualizar</span>
+          </button>
+          <button onclick="fazerLogout()" class="bg-red-600/80 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-1.5">
+            <i class="fa-solid fa-right-from-bracket"></i> <span class="hidden sm:inline">Sair</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="max-w-7xl mx-auto px-4 py-6 w-full flex-1 space-y-6">
+
+      <!-- SEÇÃO 1: MÓDULOS INTERNOS EM DESTAQUE -->
+      <section>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-2">
+            <i class="fa-solid fa-star text-amber-500"></i> Acesso Rápido — Módulos Internos 2º SGB
+          </h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- CARD 1: OPERACIONAL -->
+          <a href="plantao.html" rel="noopener noreferrer"
+             class="group bg-gradient-to-br from-pmesp-red to-red-800 text-white rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 flex items-center justify-between border-b-4 border-red-950">
+            <div class="space-y-1 pr-3">
+              <span class="text-[10px] font-extrabold uppercase tracking-widest bg-black/25 px-2.5 py-0.5 rounded-full">Prontidão 24h</span>
+              <h3 class="text-xl font-black tracking-tight mt-1">Operacional</h3>
+              <p class="text-xs text-red-100 leading-relaxed">Plantão Diário, Guarnições, Passagem de Serviço e Escala de Horas.</p>
+            </div>
+            <div class="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center shrink-0 group-hover:scale-110 transition">
+              <i class="fa-solid fa-truck-droplet text-2xl text-amber-300"></i>
+            </div>
+          </a>
+
+          <!-- CARD 2: ADMINISTRAÇÃO -->
+          <a href="adm.html" rel="noopener noreferrer"
+             class="group bg-gradient-to-br from-pmesp-blue to-pmesp-darkblue text-white rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 flex items-center justify-between border-b-4 border-slate-950">
+            <div class="space-y-1 pr-3">
+              <span class="text-[10px] font-extrabold uppercase tracking-widest bg-white/15 px-2.5 py-0.5 rounded-full">Gestão & Comando</span>
+              <h3 class="text-xl font-black tracking-tight mt-1">Administração</h3>
+              <p class="text-xs text-blue-100 leading-relaxed">Controle de Efetivo, Frota de Viaturas, Cadastros e Configurações.</p>
+            </div>
+            <div class="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center shrink-0 group-hover:scale-110 transition">
+              <i class="fa-solid fa-building-shield text-2xl text-amber-400"></i>
+            </div>
+          </a>
+
+          <!-- CARD 3: ESCALAS -->
+          <a href="escalas.html" rel="noopener noreferrer"
+             class="group bg-gradient-to-br from-emerald-700 to-teal-900 text-white rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1 flex items-center justify-between border-b-4 border-teal-950">
+            <div class="space-y-1 pr-3">
+              <span class="text-[10px] font-extrabold uppercase tracking-widest bg-black/25 px-2.5 py-0.5 rounded-full">Planejamento & SIPA</span>
+              <h3 class="text-xl font-black tracking-tight mt-1">Escalas</h3>
+              <p class="text-xs text-emerald-100 leading-relaxed">Projeção Mensal, Reconciliação, SIPA F-25 e Relatório Prefeitura.</p>
+            </div>
+            <div class="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center shrink-0 group-hover:scale-110 transition">
+              <i class="fa-solid fa-calendar-check text-2xl text-amber-300"></i>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      <!-- SEÇÃO 2: QUADRO DE AVISOS (ROTINAS OPERACIONAIS) + CALENDÁRIO INTEGRADO -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- COLUNA ESQUERDA (7 COLUNAS): QUADRO DE AVISOS E ROTINAS OPERACIONAIS -->
+        <div class="lg:col-span-7 bg-white rounded-2xl shadow border border-slate-200 flex flex-col overflow-hidden">
+          <div class="bg-slate-50 px-5 py-3.5 border-b flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+                <i class="fa-solid fa-bullhorn"></i>
+              </div>
+              <div>
+                <h3 class="text-sm font-black text-pmesp-blue uppercase">Quadro de Avisos & Rotinas Operacionais</h3>
+                <p class="text-[11px] text-slate-500">Ordens em vigor, rotinas diárias, semanais e mensais da prontidão</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 bg-slate-200 p-1 rounded-lg text-xs font-bold">
+              <button onclick="filtrarAvisos('hoje')" id="btn-aviso-hoje" class="px-3 py-1 rounded bg-white text-pmesp-blue shadow-sm transition">Hoje</button>
+              <button onclick="filtrarAvisos('todas')" id="btn-aviso-todas" class="px-3 py-1 rounded text-slate-600 hover:text-slate-900 transition">Todas as Rotinas</button>
+            </div>
+          </div>
+
+          <div id="lista-avisos-operacionais" class="p-4 space-y-3 overflow-y-auto max-h-[440px] custom-scrollbar flex-1">
+            <p class="text-xs text-slate-400 text-center py-10">Carregando rotinas operacionais da nuvem...</p>
+          </div>
+        </div>
+
+        <!-- COLUNA DIREITA (5 COLUNAS): GOOGLE CALENDAR + GRADE NATIVA (SOMENTE LEITURA) -->
+        <div class="lg:col-span-5 bg-white rounded-2xl shadow border border-slate-200 flex flex-col overflow-hidden">
+          <div class="bg-slate-50 px-4 py-3 border-b flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-lg bg-blue-100 text-pmesp-blue flex items-center justify-center font-bold">
+                <i class="fa-regular fa-calendar-days"></i>
+              </div>
+              <div>
+                <h3 class="text-sm font-black text-pmesp-blue uppercase">Agenda — 2º SGB</h3>
+                <p class="text-[10px] text-slate-500">Google Calendar (Somente Leitura)</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <!-- Alternador de Visualização: Google Embed vs Grade Interna -->
+              <div class="flex bg-slate-200 p-0.5 rounded-lg text-[10px] font-bold">
+                <button type="button" onclick="alternarModoAgenda('google')" id="btn-modo-google" class="px-2 py-1 rounded bg-white text-pmesp-blue shadow-sm transition" title="Visualizar Agenda Pública do Google">Google</button>
+                <button type="button" onclick="alternarModoAgenda('nativo')" id="btn-modo-nativo" class="px-2 py-1 rounded text-slate-600 hover:text-slate-900 transition" title="Visualizar Grade Interna">Interna</button>
+              </div>
+
+              <!-- Botão Exclusivo Gestor: Configurar Link da Agenda -->
+              <button type="button" id="btn-link-calendario" onclick="abrirModalLinkCalendario()" class="hidden text-xs font-bold bg-slate-200 hover:bg-slate-300 text-slate-700 px-2.5 py-1.5 rounded-lg transition items-center gap-1" title="Inserir/Alterar Link do Google Calendar">
+                <i class="fa-solid fa-gear"></i> <span class="hidden sm:inline">Link</span>
+              </button>
+
+              <!-- Botão Exclusivo Gestor: Adicionar Evento Manual -->
+              <button type="button" id="btn-cfg-calendario" onclick="abrirModalCalendario()" class="hidden text-xs font-bold bg-pmesp-blue hover:bg-pmesp-darkblue text-white px-2.5 py-1.5 rounded-lg transition items-center gap-1" title="Adicionar Compromisso Manual">
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- MODO 1: INCORPORAÇÃO DIRETA DO GOOGLE CALENDAR PÚBLICO -->
+          <div id="container-google-embed" class="flex-1 flex flex-col justify-between bg-slate-50 min-h-[390px]">
+            <iframe id="iframe-calendario" class="w-full flex-1 border-0 min-h-[350px]" frameborder="0" scrolling="no"></iframe>
+            <div class="px-4 py-2.5 bg-white border-t flex items-center justify-between text-[11px]">
+              <span class="text-slate-500 font-semibold truncate" id="lbl-id-agenda-atual">Agenda: lucasgalvaoleite@gmail.com</span>
+              <a id="link-abrir-gcal-embed" href="https://calendar.google.com/calendar/u/0?cid=bHVjYXNnYWx2YW9sZWl0ZUBnbWFpbC5jb20" target="_blank" rel="noopener noreferrer" class="font-bold text-pmesp-blue hover:underline flex items-center gap-1 shrink-0">
+                Abrir no Google Agenda <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+              </a>
+            </div>
+          </div>
+
+          <!-- MODO 2: GRADE DO CALENDÁRIO NATIVO -->
+          <div id="container-calendario-nativo" class="hidden p-4 flex-1 flex-col justify-between bg-white min-h-[390px]">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <button type="button" onclick="mudarMesCalendario(-1)" class="w-7 h-7 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-xs transition">
+                  <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <span id="cal-mes-ano" class="text-xs font-black text-pmesp-blue uppercase">...</span>
+                <button type="button" onclick="mudarMesCalendario(1)" class="w-7 h-7 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-xs transition">
+                  <i class="fa-solid fa-chevron-right"></i>
+                </button>
+              </div>
+              <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-extrabold uppercase text-slate-400 mb-1">
+                <div class="text-red-500">Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div class="text-red-500">Sáb</div>
+              </div>
+              <div id="grid-dias-calendario" class="grid grid-cols-7 gap-1 text-xs">
+                <!-- Gerado via JS -->
+              </div>
+            </div>
+
+            <!-- Lista de Eventos do Mês / Dia Selecionado -->
+            <div class="mt-4 pt-3 border-t">
+              <div class="flex items-center justify-between mb-2">
+                <span id="lbl-eventos-cal" class="text-[10px] font-black uppercase text-slate-500">Compromissos do Mês</span>
+                <a id="link-abrir-gcal" href="https://calendar.google.com/calendar/u/0?cid=bHVjYXNnYWx2YW9sZWl0ZUBnbWFpbC5jb20" target="_blank" rel="noopener noreferrer" class="text-[10px] font-bold text-pmesp-blue hover:underline flex items-center gap-1">
+                  Abrir Google Calendar <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                </a>
+              </div>
+              <div id="lista-eventos-calendario" class="space-y-1.5 max-h-[120px] overflow-y-auto custom-scrollbar pr-1">
+                <!-- Eventos injetados via JS -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- SEÇÃO 3: FAVORITOS E LINKS ÚTEIS -->
+      <section class="bg-white rounded-2xl shadow border border-slate-200 p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b pb-3 mb-4">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+              <i class="fa-solid fa-bookmark"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-black text-pmesp-blue uppercase">Favoritos & Sistemas Externos</h3>
+              <p class="text-[11px] text-slate-500">Atalhos rápidos para sistemas institucionais e ferramentas de apoio</p>
+            </div>
+          </div>
+
+          <!-- Botão Adicionar Link (Exclusivo Gestor) -->
+          <button id="btn-novo-favorito" onclick="abrirModalFavorito()" class="hidden bg-pmesp-blue hover:bg-pmesp-darkblue text-white px-4 py-2 rounded-lg text-xs font-bold transition items-center gap-2 shadow-sm">
+            <i class="fa-solid fa-plus"></i> Inserir Novo Link
+          </button>
+        </div>
+
+        <div id="grid-favoritos" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <!-- Renderizado via JS -->
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ================= MODAL: ADICIONAR / EDITAR FAVORITO (GESTOR) ================= -->
+  <div id="modal-favorito" class="fixed inset-0 z-[120] bg-slate-900/70 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border-t-4 border-pmesp-blue">
+      <div class="bg-pmesp-blue text-white px-5 py-4 flex justify-between items-center">
+        <h3 class="font-bold text-sm"><i class="fa-solid fa-link mr-1"></i> Inserir Novo Link nos Favoritos</h3>
+        <button onclick="fecharModalFavorito()" class="text-white/70 hover:text-white text-lg leading-none">&times;</button>
+      </div>
+      <form onsubmit="salvarNovoFavorito(event)" class="p-5 space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Título do Link</label>
+          <input type="text" id="fav-titulo" required placeholder="Ex: SIPA Web, CIAF, Correio PM..." class="w-full border-2 border-slate-200 rounded-lg p-2.5 text-sm font-bold outline-none focus:border-pmesp-blue">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Endereço (URL)</label>
+          <input type="url" id="fav-url" required placeholder="https://..." class="w-full border-2 border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-pmesp-blue">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Categoria / Etiqueta</label>
+            <input type="text" id="fav-categoria" placeholder="Ex: PMESP, CBM, Apoio" class="w-full border-2 border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-pmesp-blue">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Ícone</label>
+            <select id="fav-icone" class="w-full border-2 border-slate-200 rounded-lg p-2.5 text-sm font-bold outline-none focus:border-pmesp-blue bg-white">
+              <option value="fa-link">🔗 Link Padrão</option>
+              <option value="fa-globe">🌐 Portal Web</option>
+              <option value="fa-file-shield">🛡️ Sistema PM</option>
+              <option value="fa-fire">🔥 Bombeiros</option>
+              <option value="fa-envelope">✉️ E-mail / Doc</option>
+              <option value="fa-folder-open">📂 Drive / Pasta</option>
+              <option value="fa-graduation-cap">🎓 Ensino / EAD</option>
+              <option value="fa-map-location-dot">📍 Mapa / GPS</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-3 border-t">
+          <button type="button" onclick="fecharModalFavorito()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
+          <button type="submit" class="px-5 py-2 bg-pmesp-blue text-white rounded-lg text-xs font-bold hover:bg-pmesp-darkblue shadow">Salvar Favorito</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL EXCLUSIVO: CONFIGURAR LINK DO GOOGLE CALENDAR (GESTOR) ================= -->
+  <div id="modal-link-calendario" class="fixed inset-0 z-[120] bg-slate-900/70 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border-t-4 border-pmesp-blue">
+      <div class="bg-pmesp-blue text-white px-5 py-4 flex justify-between items-center">
+        <h3 class="font-bold text-sm"><i class="fa-solid fa-gear mr-1"></i> Configurar Link do Google Calendar</h3>
+        <button type="button" onclick="fecharModalLinkCalendario()" class="text-white/70 hover:text-white text-lg leading-none">&times;</button>
+      </div>
+      <form onsubmit="salvarLinkCalendario(event)" class="p-5 space-y-4">
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-[11px] text-slate-700 leading-relaxed">
+          Cole abaixo o <strong>link de compartilhamento</strong> da agenda (ex: <code>https://calendar.google.com/calendar/u/0?cid=...</code>), a URL de incorporação ou apenas o <strong>e-mail da agenda</strong>. O sistema converte automaticamente.
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Link ou E-mail da Agenda Pública</label>
+          <input type="text" id="cal-link-input" required placeholder="https://calendar.google.com/calendar/u/0?cid=..." class="w-full border-2 border-slate-200 rounded-lg p-2.5 text-xs font-bold outline-none focus:border-pmesp-blue">
+        </div>
+        <div class="flex justify-end gap-2 pt-3 border-t">
+          <button type="button" onclick="fecharModalLinkCalendario()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
+          <button type="submit" class="px-5 py-2 bg-pmesp-blue text-white rounded-lg text-xs font-bold hover:bg-pmesp-darkblue shadow">Salvar Link da Agenda</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: ADICIONAR EVENTO MANUAL NA GRADE INTERNA (GESTOR) ================= -->
+  <div id="modal-calendario" class="fixed inset-0 z-[120] bg-slate-900/70 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border-t-4 border-pmesp-blue">
+      <div class="bg-pmesp-blue text-white px-5 py-4 flex justify-between items-center">
+        <h3 class="font-bold text-sm"><i class="fa-regular fa-calendar-plus mr-1"></i> Novo Compromisso (Grade Interna)</h3>
+        <button type="button" onclick="fecharModalCalendario()" class="text-white/70 hover:text-white text-lg leading-none">&times;</button>
+      </div>
+      <form onsubmit="salvarEventoCalendario(event)" class="p-5 space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Título do Evento / Compromisso</label>
+          <input type="text" id="cal-ev-titulo" required placeholder="Ex: Instrução Tática, Reunião Cmt, Vistoria..." class="w-full border-2 border-slate-200 rounded-lg p-2.5 text-xs font-bold outline-none focus:border-pmesp-blue">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Data</label>
+            <input type="date" id="cal-ev-data" required class="w-full border-2 border-slate-200 rounded-lg p-2.5 text-xs font-bold outline-none focus:border-pmesp-blue">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Horário (Opcional)</label>
+            <input type="time" id="cal-ev-hora" class="w-full border-2 border-slate-200 rounded-lg p-2.5 text-xs font-bold outline-none focus:border-pmesp-blue">
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-3 border-t">
+          <button type="button" onclick="fecharModalCalendario()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
+          <button type="submit" class="px-5 py-2 bg-pmesp-blue text-white rounded-lg text-xs font-bold hover:bg-pmesp-darkblue shadow">Salvar Compromisso</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL DE CONFIRMAÇÃO DE EXCLUSÃO ================= -->
+  <div id="modal-confirmacao" class="fixed inset-0 z-[150] bg-slate-900/70 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center border-t-4 border-pmesp-red">
+      <div class="w-12 h-12 rounded-full bg-red-100 text-pmesp-red flex items-center justify-center mx-auto mb-3">
+        <i class="fa-solid fa-trash-can text-xl"></i>
+      </div>
+      <h4 class="text-sm font-black text-slate-800 uppercase mb-1">Confirmar Exclusão</h4>
+      <p id="texto-confirmacao" class="text-xs text-slate-600 mb-5">Deseja realmente excluir este item?</p>
+      <div class="flex gap-2 justify-center">
+        <button type="button" onclick="fecharModalConfirmacao()" class="px-4 py-2 border rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 flex-1">Cancelar</button>
+        <button type="button" id="btn-confirmar-acao" class="px-4 py-2 bg-pmesp-red text-white rounded-lg text-xs font-bold hover:bg-red-700 shadow flex-1">Sim, Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. AUTENTICAÇÃO E CONTROLE DE SESSÃO
+    // ==========================================
+    const usuarios = {
+      'gestor': { senha: 'Xdl33122@', nivel: 'gestor' },
+      'admin': { senha: 'admin193', nivel: 'admin' },
+      'operacional': { senha: 'operacional', nivel: 'operacional' }
+    };
+
+    const API_URL = "https://script.google.com/macros/s/AKfycbxyREqwxOntX2_rXCDMK6xyU-wYxlfk986zJjL6G2u_H39mOJN8EkRWomaqte37zQ2ydw/exec";
+    const AGENDA_PADRAO_URL = "https://calendar.google.com/calendar/u/0?cid=bHVjYXNnYWx2YW9sZWl0ZUBnbWFpbC5jb20";
+
+    let appState = { 
+      efetivo: [], 
+      frota: [], 
+      afastamentos: [], 
+      plantoes: [], 
+      avisos: [], 
+      favoritos: [], 
+      agenda: [], 
+      calendarUrl: AGENDA_PADRAO_URL 
+    };
+    let filtroAvisoModo = 'hoje';
+    let modoAgendaAtual = 'google'; // 'google' ou 'nativo'
+
+    const favoritosPadrao = [
+      { id: 'fav_1', titulo: 'Plantão Operacional', href="plantao.html", categoria: 'Interno', icone: 'fa-truck-droplet' },
+      { id: 'fav_2', titulo: 'Administração 2º SGB', href="adm.html", categoria: 'Interno', icone: 'fa-building-shield' },
+      { id: 'fav_3', titulo: 'Escalas e SIPA', href="escalas.html", categoria: 'Interno', icone: 'fa-calendar-check' }
+    ];
+
+    function abrirConfirmacao(mensagem, callbackConfirmar) {
+      document.getElementById('texto-confirmacao').textContent = mensagem;
+      const modal = document.getElementById('modal-confirmacao');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      const btn = document.getElementById('btn-confirmar-acao');
+      btn.onclick = async () => {
+        fecharModalConfirmacao();
+        await callbackConfirmar();
+      };
+    }
+
+    function fecharModalConfirmacao() {
+      const modal = document.getElementById('modal-confirmacao');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function verificarSessao() {
+      const nivel = localStorage.getItem('usuarioAtivo');
+      if (nivel === 'gestor' || nivel === 'admin' || nivel === 'operacional') {
+        document.getElementById('tela-login').classList.add('hidden');
+        document.getElementById('tela-sistema').classList.remove('hidden');
+        document.getElementById('tela-sistema').classList.add('flex');
+
+        document.getElementById('badge-nivel').textContent = `Perfil: ${nivel}`;
+			
+				// Oculta os cards de Administração e Escalas para o perfil 'operacional'
+const cardsModulo = document.querySelectorAll('section a[href*="index-html-adm"], section a[href*="escalas"]');
+cardsModulo.forEach(card => {
+  card.style.display = (nivel === 'operacional') ? 'none' : 'flex';
+});
+
+        // Habilita botões exclusivos se for Gestor
+        const btnFav = document.getElementById('btn-novo-favorito');
+        const btnCal = document.getElementById('btn-cfg-calendario');
+        const btnLinkCal = document.getElementById('btn-link-calendario');
+        if (nivel === 'gestor') {
+          btnFav.classList.remove('hidden');
+          btnFav.classList.add('flex');
+          btnCal.classList.remove('hidden');
+          btnCal.classList.add('flex');
+          btnLinkCal.classList.remove('hidden');
+          btnLinkCal.classList.add('flex');
+        } else {
+          btnFav.classList.add('hidden');
+          btnCal.classList.add('hidden');
+          btnLinkCal.classList.add('hidden');
+        }
+
+        atualizarDataCabecalho();
+        carregarDadosNuvem();
+      } else {
+        document.getElementById('tela-login').classList.remove('hidden');
+        document.getElementById('tela-sistema').classList.add('hidden');
+        document.getElementById('tela-sistema').classList.remove('flex');
+      }
+    }
+
+    function fazerLogin(event) {
+      event.preventDefault();
+      const user = document.getElementById('login-usuario').value.trim().toLowerCase();
+      const pass = document.getElementById('login-senha').value;
+      const msgErro = document.getElementById('msg-erro');
+
+      if (usuarios[user] && usuarios[user].senha === pass) {
+        localStorage.setItem('usuarioAtivo', usuarios[user].nivel);
+        msgErro.classList.add('hidden');
+        verificarSessao();
+      } else {
+        msgErro.classList.remove('hidden');
+        document.getElementById('login-senha').value = '';
+      }
+    }
+
+    function fazerLogout() {
+      localStorage.removeItem('usuarioAtivo');
+      document.getElementById('login-usuario').value = '';
+      document.getElementById('login-senha').value = '';
+      verificarSessao();
+    }
+
+    function atualizarDataCabecalho() {
+      const hoje = new Date();
+      const opcoes = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const str = hoje.toLocaleDateString('pt-BR', opcoes);
+      document.getElementById('lbl-data-hoje').textContent = str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    window.addEventListener('DOMContentLoaded', verificarSessao);
+
+    // ==========================================
+    // 2. COMUNICAÇÃO COM A NUVEM (GOOGLE APPS SCRIPT)
+    // ==========================================
+    async function carregarDadosNuvem() {
+      const statusEl = document.getElementById('status-nuvem');
+      statusEl.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Sincronizando...`;
+      try {
+        const resposta = await fetch(API_URL);
+        const resultado = await resposta.json();
+        if (resultado.sucesso && resultado.dados) {
+          appState = resultado.dados;
+          if (!appState.avisos) appState.avisos = [];
+          if (!appState.agenda) appState.agenda = [];
+
+          const salvosLocal = localStorage.getItem('favoritos_2sgb');
+          if (!Array.isArray(appState.favoritos)) {
+            appState.favoritos = salvosLocal !== null ? JSON.parse(salvosLocal) : [...favoritosPadrao];
+          } else if (salvosLocal !== null && localStorage.getItem('favoritos_modificado_local') === 'true') {
+            appState.favoritos = JSON.parse(salvosLocal);
+          }
+
+          const calLocal = localStorage.getItem('calendar_2sgb');
+          if (!appState.calendarUrl) {
+            appState.calendarUrl = calLocal || AGENDA_PADRAO_URL;
+          }
+
+          statusEl.innerHTML = `<i class="fa-solid fa-cloud-check text-green-400"></i> Nuvem OK`;
+        }
+      } catch (erro) {
+        statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-400"></i> Modo Local`;
+        const salvosLocal = localStorage.getItem('favoritos_2sgb');
+        if (!Array.isArray(appState.favoritos)) {
+          appState.favoritos = salvosLocal !== null ? JSON.parse(salvosLocal) : [...favoritosPadrao];
+        }
+        const calLocal = localStorage.getItem('calendar_2sgb');
+        if (!appState.calendarUrl) {
+          appState.calendarUrl = calLocal || AGENDA_PADRAO_URL;
+        }
+      }
+      renderizarAvisosOperacionais();
+      renderizarFavoritos();
+      atualizarIframeGoogleCalendar();
+      renderizarCalendario();
+    }
+
+    async function sincronizarComNuvem() {
+      localStorage.setItem('favoritos_2sgb', JSON.stringify(appState.favoritos || []));
+      localStorage.setItem('favoritos_modificado_local', 'true');
+      if (appState.calendarUrl) localStorage.setItem('calendar_2sgb', appState.calendarUrl);
+
+      try {
+        await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ dados: appState, usuario: "Gestor", estacao: "Geral" })
+        });
+      } catch (e) {
+        console.error("Erro ao sincronizar na nuvem:", e);
+      }
+    }
+
+    // ==========================================
+    // 3. QUADRO DE AVISOS (ROTINAS OPERACIONAIS)
+    // ==========================================
+    function filtrarAvisos(modo) {
+      filtroAvisoModo = modo;
+      const btnHoje = document.getElementById('btn-aviso-hoje');
+      const btnTodas = document.getElementById('btn-aviso-todas');
+
+      if (modo === 'hoje') {
+        btnHoje.className = "px-3 py-1 rounded bg-white text-pmesp-blue shadow-sm transition";
+        btnTodas.className = "px-3 py-1 rounded text-slate-600 hover:text-slate-900 transition";
+      } else {
+        btnTodas.className = "px-3 py-1 rounded bg-white text-pmesp-blue shadow-sm transition";
+        btnHoje.className = "px-3 py-1 rounded text-slate-600 hover:text-slate-900 transition";
+      }
+      renderizarAvisosOperacionais();
+    }
+
+    function renderizarAvisosOperacionais() {
+      const container = document.getElementById('lista-avisos-operacionais');
+      const hoje = new Date();
+      const diaSemana = hoje.getDay();
+      const diaMes = hoje.getDate();
+      const dataIso = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+
+      const nomesDiasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+
+      let avisosOp = (appState.avisos || []).filter(a => !a.secao || a.secao === 'Operacional');
+
+      if (filtroAvisoModo === 'hoje') {
+        avisosOp = avisosOp.filter(a => {
+          if (a.frequencia === 'Diário') return true;
+          if (a.frequencia === 'Semanal' && parseInt(a.valorData) === diaSemana) return true;
+          if (a.frequencia === 'Mensal' && parseInt(a.valorData) === diaMes) return true;
+          if (a.frequencia === 'Período' && dataIso >= a.dataInicio && dataIso <= a.dataFim) return true;
+          return false;
+        });
+      }
+
+      if (avisosOp.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 border-2 border-dashed border-slate-200 rounded-xl">
+            <i class="fa-solid fa-clipboard-check text-3xl text-slate-300 mb-2"></i>
+            <p class="text-xs font-bold text-slate-500">Nenhuma rotina ou aviso operacional ${filtroAvisoModo === 'hoje' ? 'programado para hoje' : 'cadastrado'}.</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      avisosOp.forEach(av => {
+        let badgeFreq = av.frequencia || 'Aviso';
+        let corBadge = 'bg-amber-500 text-white';
+
+        if (av.frequencia === 'Diário') {
+          corBadge = 'bg-blue-600 text-white';
+        } else if (av.frequencia === 'Semanal') {
+          badgeFreq = `Semanal (${nomesDiasSemana[parseInt(av.valorData)] || ''})`;
+          corBadge = 'bg-indigo-600 text-white';
+        } else if (av.frequencia === 'Mensal') {
+          badgeFreq = `Mensal (Dia ${av.valorData})`;
+          corBadge = 'bg-purple-600 text-white';
+        } else if (av.frequencia === 'Período') {
+          badgeFreq = `Período (${av.dataInicio || ''} a ${av.dataFim || ''})`;
+          corBadge = 'bg-rose-600 text-white';
+        }
+
+        html += `
+          <div class="bg-amber-50/70 border border-amber-200 border-l-4 border-l-amber-500 rounded-xl p-3.5 shadow-sm hover:shadow transition">
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <span class="font-extrabold text-pmesp-blue text-xs uppercase tracking-tight">${av.tipo || 'Rotina Operacional'}</span>
+              <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded ${corBadge}">${badgeFreq}</span>
+            </div>
+            <p class="text-xs text-slate-700 leading-relaxed">${av.obs || ''}</p>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    // ==========================================
+    // 4. GESTÃO DE FAVORITOS (COM ADIÇÃO E EXCLUSÃO PELO GESTOR)
+    // ==========================================
+    function renderizarFavoritos() {
+      const grid = document.getElementById('grid-favoritos');
+      const isGestor = localStorage.getItem('usuarioAtivo') === 'gestor';
+      const lista = appState.favoritos || [];
+
+      if (lista.length === 0) {
+        grid.innerHTML = `<p class="text-xs text-slate-400 col-span-full text-center py-6">Nenhum link favorito cadastrado.</p>`;
+        return;
+      }
+
+      let html = '';
+      lista.forEach((fav, idx) => {
+        const icone = fav.icone || 'fa-link';
+        const cat = fav.categoria || 'Atalho';
+        html += `
+          <div class="group relative bg-slate-50 hover:bg-white border border-slate-200 hover:border-pmesp-blue rounded-xl p-3.5 transition shadow-sm hover:shadow flex items-center justify-between gap-3">
+            <a href="${fav.url}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 flex-1 min-w-0">
+              <div class="w-10 h-10 rounded-xl bg-pmesp-blue/10 text-pmesp-blue group-hover:bg-pmesp-blue group-hover:text-white flex items-center justify-center shrink-0 transition">
+                <i class="fa-solid ${icone} text-sm"></i>
+              </div>
+              <div class="truncate">
+                <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block">${cat}</span>
+                <h4 class="text-xs font-bold text-slate-800 group-hover:text-pmesp-blue truncate">${fav.titulo}</h4>
+              </div>
+            </a>
+            ${isGestor ? `
+              <button type="button" onclick="removerFavorito(${idx})" class="text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg p-2 transition shrink-0 z-10" title="Remover Favorito">
+                <i class="fa-solid fa-trash-can text-xs"></i>
+              </button>
+            ` : `
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-300 group-hover:text-pmesp-blue"></i>
+            `}
+          </div>
+        `;
+      });
+
+      grid.innerHTML = html;
+    }
+
+    function abrirModalFavorito() {
+      document.getElementById('fav-titulo').value = '';
+      document.getElementById('fav-url').value = '';
+      document.getElementById('fav-categoria').value = '';
+      document.getElementById('fav-icone').value = 'fa-link';
+      const modal = document.getElementById('modal-favorito');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function fecharModalFavorito() {
+      const modal = document.getElementById('modal-favorito');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function salvarNovoFavorito(event) {
+      event.preventDefault();
+      if (localStorage.getItem('usuarioAtivo') !== 'gestor') return;
+
+      const titulo = document.getElementById('fav-titulo').value.trim();
+      const url = document.getElementById('fav-url').value.trim();
+      const categoria = document.getElementById('fav-categoria').value.trim() || 'Externo';
+      const icone = document.getElementById('fav-icone').value;
+
+      if (!titulo || !url) return;
+
+      if (!Array.isArray(appState.favoritos)) appState.favoritos = [];
+      appState.favoritos.push({
+        id: 'fav_' + Date.now(),
+        titulo,
+        url,
+        categoria,
+        icone
+      });
+
+      fecharModalFavorito();
+      renderizarFavoritos();
+      await sincronizarComNuvem();
+    }
+
+    function removerFavorito(index) {
+      if (localStorage.getItem('usuarioAtivo') !== 'gestor') return;
+      const item = (appState.favoritos || [])[index];
+      const nomeItem = item ? item.titulo : 'este link';
+
+      abrirConfirmacao(`Deseja remover "${nomeItem}" dos favoritos?`, async () => {
+        appState.favoritos.splice(index, 1);
+        renderizarFavoritos();
+        await sincronizarComNuvem();
+      });
+    }
+
+    // ==========================================
+    // 5. CONVERSOR INTELIGENTE DE LINK DO GOOGLE CALENDAR + GRADE NATIVA
+    // ==========================================
+    let calDataRef = new Date();
+    let diaSelecionadoCal = null;
+
+    function converterEntradaParaEmbedGoogle(entradaBruta) {
+      const entrada = (entradaBruta || AGENDA_PADRAO_URL).trim();
+
+      // Caso 1: Já é uma URL de embed direta
+      if (entrada.includes('/calendar/embed')) {
+        let idExtraido = 'Agenda Pública';
+        try {
+          const urlObj = new URL(entrada);
+          if (urlObj.searchParams.get('src')) idExtraido = decodeURIComponent(urlObj.searchParams.get('src'));
+        } catch (e) {}
+        return { embedUrl: entrada, abrirUrl: entrada, calendarId: idExtraido };
+      }
+
+      // Caso 2: Link de compartilhamento com ?cid=... (Base64 ou texto)
+      if (entrada.includes('cid=')) {
+        try {
+          const urlObj = new URL(entrada);
+          const cidParam = urlObj.searchParams.get('cid');
+          if (cidParam) {
+            let decodedId = cidParam;
+            if (!cidParam.includes('@')) {
+              try { decodedId = atob(cidParam); } catch (e) { decodedId = cidParam; }
+            }
+            const srcEncoded = encodeURIComponent(decodedId.trim());
+            return {
+              embedUrl: `https://calendar.google.com/calendar/embed?src=${srcEncoded}&ctz=America%2FSao_Paulo&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=1&showCalendars=0&mode=MONTH`,
+              abrirUrl: entrada,
+              calendarId: decodedId.trim()
+            };
+          }
+        } catch (e) {}
+      }
+
+      // Caso 3: Usuário digitou diretamente o e-mail/ID da agenda (ex: lucasgalvaoleite@gmail.com)
+      if (entrada.includes('@') && !entrada.startsWith('http')) {
+        const srcEncoded = encodeURIComponent(entrada);
+        return {
+          embedUrl: `https://calendar.google.com/calendar/embed?src=${srcEncoded}&ctz=America%2FSao_Paulo&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=1&showCalendars=0&mode=MONTH`,
+          abrirUrl: `https://calendar.google.com/calendar/u/0/r?cid=${btoa(entrada)}`,
+          calendarId: entrada
+        };
+      }
+
+      // Fallback padrão para lucasgalvaoleite@gmail.com
+      return {
+        embedUrl: `https://calendar.google.com/calendar/embed?src=lucasgalvaoleite%40gmail.com&ctz=America%2FSao_Paulo&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=1&showCalendars=0&mode=MONTH`,
+        abrirUrl: AGENDA_PADRAO_URL,
+        calendarId: 'lucasgalvaoleite@gmail.com'
+      };
+    }
+
+    function atualizarIframeGoogleCalendar() {
+      const salvoCalLocal = localStorage.getItem('calendar_2sgb');
+      const entrada = appState.calendarUrl || salvoCalLocal || AGENDA_PADRAO_URL;
+      const info = converterEntradaParaEmbedGoogle(entrada);
+
+      const iframe = document.getElementById('iframe-calendario');
+      if (iframe && iframe.src !== info.embedUrl) {
+        iframe.src = info.embedUrl;
+      }
+
+      document.getElementById('lbl-id-agenda-atual').textContent = `Agenda: ${info.calendarId}`;
+      document.getElementById('link-abrir-gcal-embed').href = info.abrirUrl;
+      document.getElementById('link-abrir-gcal').href = info.abrirUrl;
+    }
+
+    function alternarModoAgenda(modo) {
+      modoAgendaAtual = modo;
+      const boxGoogle = document.getElementById('container-google-embed');
+      const boxNativo = document.getElementById('container-calendario-nativo');
+      const btnGoogle = document.getElementById('btn-modo-google');
+      const btnNativo = document.getElementById('btn-modo-nativo');
+
+      if (modo === 'google') {
+        boxGoogle.classList.remove('hidden');
+        boxGoogle.classList.add('flex');
+        boxNativo.classList.add('hidden');
+        boxNativo.classList.remove('flex');
+        btnGoogle.className = "px-2 py-1 rounded bg-white text-pmesp-blue shadow-sm transition";
+        btnNativo.className = "px-2 py-1 rounded text-slate-600 hover:text-slate-900 transition";
+        atualizarIframeGoogleCalendar();
+      } else {
+        boxNativo.classList.remove('hidden');
+        boxNativo.classList.add('flex');
+        boxGoogle.classList.add('hidden');
+        boxGoogle.classList.remove('flex');
+        btnNativo.className = "px-2 py-1 rounded bg-white text-pmesp-blue shadow-sm transition";
+        btnGoogle.className = "px-2 py-1 rounded text-slate-600 hover:text-slate-900 transition";
+        renderizarCalendario();
+      }
+    }
+
+    function abrirModalLinkCalendario() {
+      const salvoCalLocal = localStorage.getItem('calendar_2sgb');
+      document.getElementById('cal-link-input').value = appState.calendarUrl || salvoCalLocal || AGENDA_PADRAO_URL;
+      const modal = document.getElementById('modal-link-calendario');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function fecharModalLinkCalendario() {
+      const modal = document.getElementById('modal-link-calendario');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function salvarLinkCalendario(event) {
+      event.preventDefault();
+      if (localStorage.getItem('usuarioAtivo') !== 'gestor') return;
+
+      const novoLink = document.getElementById('cal-link-input').value.trim();
+      if (!novoLink) return;
+
+      appState.calendarUrl = novoLink;
+      localStorage.setItem('calendar_2sgb', novoLink);
+
+      fecharModalLinkCalendario();
+      atualizarIframeGoogleCalendar();
+      alternarModoAgenda('google');
+      await sincronizarComNuvem();
+    }
+
+    function mudarMesCalendario(delta) {
+      calDataRef.setMonth(calDataRef.getMonth() + delta);
+      diaSelecionadoCal = null;
+      renderizarCalendario();
+    }
+
+    function obterEventosDoMes(ano, mes) {
+      const mesStr = String(mes + 1).padStart(2, '0');
+      const prefixo = `${ano}-${mesStr}`;
+      let lista = [];
+
+      (appState.agenda || []).forEach((ev, idx) => {
+        if (ev.data && ev.data.startsWith(prefixo)) {
+          lista.push({ ...ev, idxOriginal: idx, origem: 'agenda' });
+        }
+      });
+
+      (appState.avisos || []).forEach(av => {
+        if (av.frequencia === 'Período' && av.dataInicio && av.dataInicio.startsWith(prefixo)) {
+          lista.push({
+            titulo: `${av.tipo}: ${av.obs}`,
+            data: av.dataInicio,
+            hora: '',
+            origem: 'aviso'
+          });
+        }
+      });
+
+      (appState.efetivo || []).forEach(ef => {
+        if (ef.aniversario) {
+          const partes = ef.aniversario.split('/');
+          if (partes.length >= 2 && partes[1] === mesStr) {
+            lista.push({
+              titulo: `🎂 Aniversário: ${ef.graduacao} ${ef.nomeGuerra}`,
+              data: `${ano}-${mesStr}-${partes[0].padStart(2, '0')}`,
+              hora: '',
+              origem: 'niver'
+            });
+          }
+        }
+      });
+
+      return lista.sort((a, b) => a.data.localeCompare(b.data));
+    }
+
+    function selecionarDiaCalendario(dataIso) {
+      diaSelecionadoCal = (diaSelecionadoCal === dataIso) ? null : dataIso;
+      renderizarCalendario();
+    }
+
+    function renderizarCalendario() {
+      const ano = calDataRef.getFullYear();
+      const mes = calDataRef.getMonth();
+      const nomesMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+      
+      document.getElementById('cal-mes-ano').textContent = `${nomesMeses[mes]} ${ano}`;
+
+      const primeiroDiaSemana = new Date(ano, mes, 1).getDay();
+      const totalDiasMes = new Date(ano, mes + 1, 0).getDate();
+      const hoje = new Date();
+      const hojeIso = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+      const mesStr = String(mes + 1).padStart(2, '0');
+
+      const eventosMes = obterEventosDoMes(ano, mes);
+      const grid = document.getElementById('grid-dias-calendario');
+      let htmlGrid = '';
+
+      for (let i = 0; i < primeiroDiaSemana; i++) {
+        htmlGrid += `<div class="h-9"></div>`;
+      }
+
+      for (let d = 1; d <= totalDiasMes; d++) {
+        const diaStr = String(d).padStart(2, '0');
+        const dataIso = `${ano}-${mesStr}-${diaStr}`;
+        const evsDia = eventosMes.filter(e => e.data === dataIso);
+        const isHoje = (dataIso === hojeIso);
+        const isSel = (dataIso === diaSelecionadoCal);
+
+        let classes = "h-9 rounded-lg flex flex-col items-center justify-center cursor-pointer transition relative border ";
+        if (isSel) classes += "bg-pmesp-blue text-white font-black border-pmesp-blue shadow ";
+        else if (isHoje) classes += "bg-amber-100 text-pmesp-blue font-black border-amber-400 ";
+        else classes += "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-100 font-semibold ";
+
+        let bolinhas = '';
+        if (evsDia.length > 0) {
+          bolinhas = `<span class="w-1.5 h-1.5 rounded-full ${isSel ? 'bg-amber-300' : 'bg-pmesp-red'} mt-0.5"></span>`;
+        }
+
+        htmlGrid += `
+          <div onclick="selecionarDiaCalendario('${dataIso}')" class="${classes}" title="${evsDia.map(e => e.titulo).join(' | ')}">
+            <span>${d}</span>
+            ${bolinhas}
+          </div>
+        `;
+      }
+      grid.innerHTML = htmlGrid;
+
+      const listaEl = document.getElementById('lista-eventos-calendario');
+      const isGestor = localStorage.getItem('usuarioAtivo') === 'gestor';
+      const eventosExibidos = diaSelecionadoCal ? eventosMes.filter(e => e.data === diaSelecionadoCal) : eventosMes;
+
+      document.getElementById('lbl-eventos-cal').textContent = diaSelecionadoCal 
+        ? `Eventos em ${diaSelecionadoCal.split('-').reverse().join('/')}` 
+        : `Compromissos de ${nomesMeses[mes]}`;
+
+      if (eventosExibidos.length === 0) {
+        listaEl.innerHTML = `<p class="text-[11px] text-slate-400 italic py-3 text-center">Nenhum evento registrado na grade interna.</p>`;
+        return;
+      }
+
+      let htmlEv = '';
+      eventosExibidos.forEach(ev => {
+        const diaNum = ev.data.split('-')[2];
+        htmlEv += `
+          <div class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="bg-pmesp-blue text-white font-black text-[10px] px-1.5 py-0.5 rounded shrink-0">Dia ${diaNum}</span>
+              ${ev.hora ? `<span class="text-[10px] font-bold text-amber-700 shrink-0">${ev.hora}</span>` : ''}
+              <span class="font-semibold text-slate-700 truncate">${ev.titulo}</span>
+            </div>
+            ${(isGestor && ev.origem === 'agenda') ? `
+              <button type="button" onclick="removerEventoAgenda(${ev.idxOriginal})" class="text-slate-400 hover:text-red-600 p-1 transition shrink-0" title="Excluir">
+                <i class="fa-solid fa-trash-can text-[10px]"></i>
+              </button>
+            ` : ''}
+          </div>
+        `;
+      });
+      listaEl.innerHTML = htmlEv;
+    }
+
+    function abrirModalCalendario() {
+      document.getElementById('cal-ev-titulo').value = '';
+      document.getElementById('cal-ev-data').value = diaSelecionadoCal || new Date().toISOString().split('T')[0];
+      document.getElementById('cal-ev-hora').value = '';
+      const modal = document.getElementById('modal-calendario');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function fecharModalCalendario() {
+      const modal = document.getElementById('modal-calendario');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function salvarEventoCalendario(event) {
+      event.preventDefault();
+      if (localStorage.getItem('usuarioAtivo') !== 'gestor') return;
+
+      const titulo = document.getElementById('cal-ev-titulo').value.trim();
+      const data = document.getElementById('cal-ev-data').value;
+      const hora = document.getElementById('cal-ev-hora').value;
+
+      if (titulo && data) {
+        if (!Array.isArray(appState.agenda)) appState.agenda = [];
+        appState.agenda.push({ titulo, data, hora });
+      }
+
+      fecharModalCalendario();
+      alternarModoAgenda('nativo');
+      await sincronizarComNuvem();
+    }
+
+    function removerEventoAgenda(idx) {
+      if (localStorage.getItem('usuarioAtivo') !== 'gestor') return;
+      abrirConfirmacao("Remover este compromisso da grade interna?", async () => {
+        appState.agenda.splice(idx, 1);
+        renderizarCalendario();
+        await sincronizarComNuvem();
+      });
+    }
+  </script>
+</body>
+</html>

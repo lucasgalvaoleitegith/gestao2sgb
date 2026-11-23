@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administração e Gestor - 2º SGB</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { pmesp: { blue: '#0B2265', darkblue: '#06133B', red: '#CC0000' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
+  </script>
+  <style>
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .lbl { display: block; font-size: 10px; font-weight: 700; color: #475569; margin-bottom: 2px; text-transform: uppercase; }
+    .inp { width: 100%; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 7px 8px; outline: none; background: #fff; }
+    .inp:focus { border-color: #0B2265; }
+    .sec-ttl { font-size: 11px; font-weight: 900; color: #94a3b8; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 10px; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
+
+  <!-- TELA DE LOGIN (SEM TAG <FORM> PARA NUNCA RECARREGAR O IFRAME DO GOOGLE SITES) -->
+  <div id="tela-login" class="fixed inset-0 z-[200] bg-slate-100 flex items-center justify-center p-4">
+    <div class="bg-white max-w-sm w-full rounded-2xl shadow-2xl overflow-hidden border-t-4 border-pmesp-red">
+      <div class="bg-pmesp-blue p-6 text-center">
+        <i class="fa-solid fa-building-shield text-amber-400 text-3xl mb-2"></i>
+        <h1 class="text-xl font-black text-white">ADMINISTRAÇÃO 2º SGB</h1>
+        <p class="text-amber-400 text-xs font-bold mt-1">Acesso Restrito (Gestor / Admin)</p>
+      </div>
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="lbl">Usuário</label>
+          <input type="text" id="login-usuario" class="inp" placeholder="gestor ou admin" onkeydown="if(event.key==='Enter')fazerLogin()">
+        </div>
+        <div>
+          <label class="lbl">Senha</label>
+          <input type="password" id="login-senha" class="inp" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()">
+        </div>
+        <div id="msg-erro" class="hidden bg-red-50 text-red-600 text-xs font-bold p-2.5 rounded border border-red-200 text-center">
+          Usuário ou senha incorretos!
+        </div>
+        <button type="button" onclick="fazerLogin()" class="w-full bg-pmesp-blue text-white font-bold py-2.5 rounded-lg shadow hover:bg-pmesp-darkblue transition">
+          Entrar no Sistema
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SISTEMA PRINCIPAL -->
+  <div id="tela-sistema" class="hidden flex-col min-h-screen">
+    <header class="bg-pmesp-blue text-white shadow-md border-b-4 border-pmesp-red sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center border border-white/20">
+            <i class="fa-solid fa-server text-amber-400 text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-sm font-extrabold tracking-tight">ADMINISTRAÇÃO E MOTOR DE DADOS — 2º SGB</h1>
+            <span class="text-xs text-amber-400">Efetivo, Frota, Manutenções, Patrimônio e Nuvem</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="baixarBackupJSON()" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-1.5">
+            <i class="fa-solid fa-download text-amber-400"></i> <span class="hidden sm:inline">Backup JSON</span>
+          </button>
+          <button type="button" onclick="carregarDadosDaNuvem()" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-1.5">
+            <i class="fa-solid fa-rotate"></i> <span class="hidden sm:inline">Atualizar</span>
+          </button>
+          <button type="button" onclick="fazerLogout()" class="bg-red-600/80 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-1.5">
+            <i class="fa-solid fa-right-from-bracket"></i> Sair
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <nav class="bg-white border-b shadow-sm px-4 flex gap-2 overflow-x-auto z-30 sticky top-16">
+      <button type="button" id="nav-efetivo" onclick="mostrarAba('tab-efetivo')" class="nav-btn py-3 px-4 border-b-4 border-pmesp-blue text-pmesp-blue font-bold text-sm whitespace-nowrap transition"><i class="fa-solid fa-users mr-1"></i> 1. Efetivo</button>
+      <button type="button" id="nav-frota" onclick="mostrarAba('tab-frota')" class="nav-btn py-3 px-4 border-b-4 border-transparent text-slate-500 font-bold text-sm hover:text-pmesp-blue whitespace-nowrap transition"><i class="fa-solid fa-truck-medical mr-1"></i> 2. Frota & Manutenção</button>
+      <button type="button" id="nav-patrimonio" onclick="mostrarAba('tab-patrimonio')" class="nav-btn py-3 px-4 border-b-4 border-transparent text-slate-500 font-bold text-sm hover:text-pmesp-blue whitespace-nowrap transition"><i class="fa-solid fa-boxes-stacked mr-1"></i> 3. Patrimônio (A4)</button>
+      <button type="button" id="nav-rotina" onclick="mostrarAba('tab-rotina')" class="nav-btn py-3 px-4 border-b-4 border-transparent text-slate-500 font-bold text-sm hover:text-pmesp-blue whitespace-nowrap transition"><i class="fa-solid fa-calendar-check mr-1"></i> 4. Rotina e Avisos</button>
+      <button type="button" id="nav-gestor" onclick="mostrarAba('tab-gestor')" class="nav-btn py-3 px-4 border-b-4 border-transparent text-slate-500 font-bold text-sm hover:text-pmesp-blue whitespace-nowrap transition"><i class="fa-solid fa-database mr-1 text-amber-600"></i> 5. Nuvem & Diagnóstico</button>
+    </nav>
+
+    <div id="container-avisos-hoje" class="max-w-[1400px] mx-auto px-4 mt-3 flex flex-col gap-2 empty:hidden w-full"></div>
+
+    <main class="flex-1 w-full p-4 overflow-y-auto overflow-x-hidden flex flex-col">
+      
+      <!-- ABA 1: EFETIVO (VISÍVEL POR PADRÃO) -->
+      <div id="tab-efetivo" class="tab-pane max-w-[1400px] mx-auto w-full flex-1 flex flex-col">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
+          <div class="flex items-center gap-3">
+            <h2 class="text-xl font-black text-pmesp-blue"><i class="fa-solid fa-users"></i> Gestão de Efetivo</h2>
+            <select id="filtro-estacao-efetivo" onchange="renderTabelaEfetivo()" class="border-2 border-slate-300 rounded-lg p-1.5 text-sm font-bold bg-white text-pmesp-blue outline-none">
+              <option value="Todas">Todas as Estações</option><option value="Porto Feliz">Porto Feliz</option><option value="Salto">Salto</option><option value="Itu">Itu</option><option value="São Roque">São Roque</option><option value="Ibiúna">Ibiúna</option>
+            </select>
+          </div>
+          <div class="flex gap-2">
+            <button type="button" onclick="abrirModalImportacao('efetivo')" class="bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition flex items-center gap-2"><i class="fa-solid fa-file-excel"></i> Importar Lote</button>
+            <button type="button" onclick="abrirModalEfetivo()" class="bg-pmesp-blue text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-pmesp-darkblue transition flex items-center gap-2"><i class="fa-solid fa-user-plus"></i> Novo Integrante</button>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow border border-slate-200 flex-1 overflow-hidden flex flex-col">
+          <div class="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
+            <table class="w-full text-left text-xs whitespace-nowrap border-collapse">
+              <thead class="bg-slate-100 text-slate-600 sticky top-0 z-10 shadow-sm">
+                <tr>
+                  <th class="p-3 border-b font-bold text-center">Ações</th><th class="p-3 border-b font-bold">Tipo</th><th class="p-3 border-b font-bold">Estação</th><th class="p-3 border-b font-bold">Prontidão</th>
+                  <th class="p-3 border-b font-bold">RE</th><th class="p-3 border-b font-bold">Grad.</th><th class="p-3 border-b font-bold">Guerra</th><th class="p-3 border-b font-bold">Nome Completo</th>
+                  <th class="p-3 border-b font-bold">Função</th><th class="p-3 border-b font-bold">CPF</th><th class="p-3 border-b font-bold">LMP</th><th class="p-3 border-b font-bold">IAS</th>
+                  <th class="p-3 border-b font-bold">TAF</th><th class="p-3 border-b font-bold">OVB</th><th class="p-3 border-b font-bold">Aniversário</th><th class="p-3 border-b font-bold">Telefone</th>
+                  <th class="p-3 border-b font-bold">Contato Emerg.</th><th class="p-3 border-b font-bold">E-mail Pessoal</th><th class="p-3 border-b font-bold">Calça/Gand/Cam.</th><th class="p-3 border-b font-bold">Situação</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-efetivo" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 2: FROTA -->
+      <div id="tab-frota" class="tab-pane max-w-[1400px] mx-auto w-full flex-1 flex flex-col hidden">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
+          <div class="flex items-center gap-3">
+            <h2 class="text-xl font-black text-pmesp-blue"><i class="fa-solid fa-truck-medical"></i> Gestão de Frota</h2>
+            <select id="filtro-estacao-frota" onchange="renderTabelaFrota()" class="border-2 border-slate-300 rounded-lg p-1.5 text-sm font-bold bg-white text-pmesp-blue outline-none">
+              <option value="Todas">Todas as Estações</option><option value="Porto Feliz">Porto Feliz</option><option value="Salto">Salto</option><option value="Itu">Itu</option><option value="São Roque">São Roque</option><option value="Ibiúna">Ibiúna</option>
+            </select>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" onclick="abrirModalManutencao('')" class="bg-amber-600 text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-amber-700 transition flex items-center gap-2"><i class="fa-solid fa-screwdriver-wrench"></i> Controle de Manutenções</button>
+            <button type="button" onclick="abrirModalImportacao('frota')" class="bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition flex items-center gap-2"><i class="fa-solid fa-file-excel"></i> Importar Lote</button>
+            <button type="button" onclick="abrirModalFrota()" class="bg-pmesp-blue text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-pmesp-darkblue transition flex items-center gap-2"><i class="fa-solid fa-plus"></i> Nova Viatura</button>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow border border-slate-200 flex-1 overflow-hidden flex flex-col">
+          <div class="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
+            <table class="w-full text-left text-xs whitespace-nowrap border-collapse">
+              <thead class="bg-slate-100 text-slate-600 sticky top-0 z-10 shadow-sm">
+                <tr>
+                  <th class="p-3 border-b font-bold text-center">Ações</th><th class="p-3 border-b font-bold">Estação</th><th class="p-3 border-b font-bold">Status</th><th class="p-3 border-b font-bold">Prefixo</th>
+                  <th class="p-3 border-b font-bold">Marca/Modelo</th><th class="p-3 border-b font-bold">Domínio</th><th class="p-3 border-b font-bold">Placa</th><th class="p-3 border-b font-bold">Renavam</th>
+                  <th class="p-3 border-b font-bold">Chassi</th><th class="p-3 border-b font-bold">Motor</th><th class="p-3 border-b font-bold">Ano</th><th class="p-3 border-b font-bold">Patrimônio</th>
+                  <th class="p-3 border-b font-bold">Combustível</th><th class="p-3 border-b font-bold">Pneus</th><th class="p-3 border-b font-bold">Rádio</th><th class="p-3 border-b font-bold">Bomba Incêndio</th>
+                  <th class="p-3 border-b font-bold">N° Série</th><th class="p-3 border-b font-bold">Cap. LGE (L)</th><th class="p-3 border-b font-bold">Cap. Água (L)</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-frota" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 3: PATRIMÔNIO -->
+      <div id="tab-patrimonio" class="tab-pane max-w-[1400px] mx-auto w-full flex-1 flex flex-col hidden">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
+          <div class="flex flex-wrap items-center gap-3">
+            <h2 class="text-xl font-black text-pmesp-blue"><i class="fa-solid fa-boxes-stacked"></i> Gestão de Patrimônio</h2>
+            <select id="filtro-estacao-patrimonio" onchange="atualizarFiltroLocaisPatrimonio(); renderTabelaPatrimonio();" class="border-2 border-slate-300 rounded-lg p-1.5 text-sm font-bold bg-white text-pmesp-blue outline-none">
+              <option value="Todas">Todas as Estações</option><option value="Porto Feliz">Porto Feliz</option><option value="Salto">Salto</option><option value="Itu">Itu</option><option value="São Roque">São Roque</option><option value="Ibiúna">Ibiúna</option>
+            </select>
+            <select id="filtro-local-patrimonio" onchange="renderTabelaPatrimonio()" class="border-2 border-pmesp-blue rounded-lg p-1.5 text-sm font-bold bg-white text-pmesp-blue outline-none">
+              <option value="Todos">Todos os Ambientes / Setores</option>
+            </select>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" onclick="imprimirRelatorioPatrimonioAmbiente()" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-slate-900 transition flex items-center gap-2 shadow"><i class="fa-solid fa-print"></i> Imprimir Relação do Ambiente (A4)</button>
+            <button type="button" onclick="abrirModalImportacao('patrimonio')" class="bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition flex items-center gap-2"><i class="fa-solid fa-file-excel"></i> Importar Lote</button>
+            <button type="button" onclick="abrirModalPatrimonio()" class="bg-pmesp-blue text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-pmesp-darkblue transition flex items-center gap-2"><i class="fa-solid fa-plus"></i> Novo Item</button>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow border border-slate-200 flex-1 overflow-hidden flex flex-col">
+          <div class="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
+            <table class="w-full text-left text-xs whitespace-nowrap border-collapse">
+              <thead class="bg-slate-100 text-slate-600 sticky top-0 z-10 shadow-sm">
+                <tr>
+                  <th class="p-3 border-b font-bold text-center">Ações</th><th class="p-3 border-b font-bold">Domínio</th><th class="p-3 border-b font-bold">Nº Série / Tombo</th><th class="p-3 border-b font-bold">Equipamento / Item</th>
+                  <th class="p-3 border-b font-bold">Grupo</th><th class="p-3 border-b font-bold">Estação</th><th class="p-3 border-b font-bold">Localização / Ambiente</th><th class="p-3 border-b font-bold">Estado Conserv.</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-patrimonio" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 4: ROTINA E AVISOS -->
+      <div id="tab-rotina" class="tab-pane max-w-[1400px] mx-auto w-full flex-1 flex flex-col hidden">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-black text-pmesp-blue"><i class="fa-solid fa-calendar-check"></i> Gestão de Avisos e Rotina</h2>
+          <button type="button" onclick="abrirModalRotina()" class="bg-pmesp-blue text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-pmesp-darkblue transition flex items-center gap-2"><i class="fa-solid fa-bell"></i> Novo Aviso</button>
+        </div>
+        <div class="bg-white rounded-xl shadow border border-slate-200 flex-1 overflow-hidden flex flex-col">
+          <div class="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
+            <table class="w-full text-left text-xs whitespace-nowrap border-collapse">
+              <thead class="bg-slate-100 text-slate-600 sticky top-0 z-10 shadow-sm">
+                <tr>
+                  <th class="p-3 border-b font-bold text-center w-[100px]">Ações</th><th class="p-3 border-b font-bold">Seção / Destino</th><th class="p-3 border-b font-bold">Tipo</th>
+                  <th class="p-3 border-b font-bold">Frequência</th><th class="p-3 border-b font-bold">Período / Data</th><th class="p-3 border-b font-bold w-[40%]">Observação / Instrução</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-rotina" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABA 5: NUVEM & DIAGNÓSTICO (ANTIGA PÁGINA GESTOR) -->
+      <div id="tab-gestor" class="tab-pane max-w-5xl mx-auto w-full flex-1 flex flex-col hidden space-y-4">
+        <div class="bg-white rounded-xl shadow border border-slate-200 p-6 space-y-5">
+          <div class="flex flex-wrap items-center justify-between border-b pb-3 gap-3">
+            <div>
+              <h2 class="text-lg font-black text-pmesp-blue"><i class="fa-solid fa-network-wired mr-1"></i> Motor de Dados & Diagnóstico da Nuvem</h2>
+              <p class="text-xs text-slate-500">Monitore o volume de dados, troque a URL da API ou baixe uma cópia de segurança completa.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="sincronizarComNuvem(false)" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Forçar Gravação na Planilha
+              </button>
+              <button type="button" onclick="baixarBackupJSON()" class="bg-pmesp-blue hover:bg-pmesp-darkblue text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-download"></i> Baixar Backup (.JSON)
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div class="p-3.5 bg-slate-50 rounded-xl border">
+              <span class="lbl">Resumo de Registros</span>
+              <p id="diag-resumo" class="font-black text-pmesp-blue text-sm mt-1">Carregando...</p>
+            </div>
+            <div class="p-3.5 bg-slate-50 rounded-xl border md:col-span-2">
+              <span class="lbl">URL da API Google Apps Script (/exec)</span>
+              <div class="flex gap-2 mt-1">
+                <input type="url" id="cfg-api-url" class="inp font-mono text-[11px]" placeholder="https://script.google.com/macros/s/.../exec">
+                <button type="button" onclick="salvarNovaUrlApi()" class="bg-amber-500 hover:bg-amber-600 text-white px-4 rounded font-bold whitespace-nowrap">Salvar URL</button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <span class="lbl">Estrutura JSON Completa na Memória</span>
+              <button type="button" onclick="atualizarVisorJson()" class="text-xs font-bold text-pmesp-blue hover:underline"><i class="fa-solid fa-rotate-right"></i> Atualizar Visor</button>
+            </div>
+            <pre id="json-preview" class="bg-slate-900 text-green-400 p-4 rounded-xl text-[11px] overflow-x-auto h-80 custom-scrollbar shadow-inner"></pre>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- MODAL EFETIVO -->
+    <div id="modal-efetivo" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 hidden">
+      <div class="bg-white w-full max-w-4xl rounded-xl shadow-2xl m-4 flex flex-col max-h-[95vh]">
+        <div class="bg-pmesp-blue text-white p-4 flex justify-between items-center rounded-t-xl"><h3 class="font-bold"><i class="fa-solid fa-address-card"></i> Ficha do Integrante</h3><button type="button" onclick="fecharModal('modal-efetivo')" class="text-white hover:text-red-400 text-xl">&times;</button></div>
+        <div class="p-4 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+          <input type="hidden" id="ef-id">
+          <div>
+            <h4 class="sec-ttl">1. Dados Operacionais</h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div><label class="lbl">Tipo</label><select id="ef-tipo" class="inp"><option>Militar</option><option>BCP</option></select></div>
+              <div><label class="lbl">Estação</label><select id="ef-estacao" class="inp"><option>Porto Feliz</option><option>Salto</option><option>Itu</option><option>São Roque</option><option>Ibiúna</option></select></div>
+              <div><label class="lbl">Prontidão / Turno</label><select id="ef-prontidao" class="inp"><optgroup label="Militares (24h)"><option>Amarela</option><option>Verde</option><option>Azul</option><option>Expediente</option></optgroup><optgroup label="BCP (12x24/12x48)"><option>Equipe A</option><option>Equipe B</option><option>Equipe C</option><option>Equipe D</option></optgroup></select></div>
+              <div><label class="lbl">Função</label><input type="text" id="ef-funcao" class="inp" placeholder="Ex: Cmt Prontidão"></div>
+            </div>
+          </div>
+          <div>
+            <h4 class="sec-ttl">2. Identificação Pessoal</h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div><label class="lbl">RE/Matrícula</label><input type="text" id="ef-re" class="inp font-bold text-pmesp-blue"></div>
+              <div><label class="lbl">Graduação</label><select id="ef-graduacao" class="inp"><option>CAP PM</option><option>1º TEN PM</option><option>SUBTEN PM</option><option>1º SGT PM</option><option>2º SGT PM</option><option>3º SGT PM</option><option>CB PM</option><option>SD PM</option><option>BCP</option><option>Municipal</option></select></div>
+              <div><label class="lbl">Nome Guerra</label><input type="text" id="ef-guerra" class="inp font-bold"></div>
+              <div><label class="lbl">CPF</label><input type="text" id="ef-cpf" class="inp"></div>
+              <div class="col-span-2 md:col-span-3"><label class="lbl">Nome Completo</label><input type="text" id="ef-nome" class="inp"></div>
+              <div><label class="lbl">Aniversário</label><input type="text" id="ef-aniversario" class="inp" placeholder="DD/MM/AAAA" oninput="mascaraData(this)" maxlength="10"></div>
+            </div>
+          </div>
+          <div>
+            <h4 class="sec-ttl">3. Avaliações e Cursos</h4>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <div><label class="lbl">LMP Grau</label><input type="text" id="ef-lmp" class="inp"></div>
+              <div><label class="lbl">Data IAS</label><input type="text" id="ef-ias" class="inp" placeholder="DD/MM/AAAA" oninput="mascaraData(this)" maxlength="10"></div>
+              <div><label class="lbl">TAF</label><input type="text" id="ef-taf" class="inp" placeholder="DD/MM/AAAA" oninput="mascaraData(this)" maxlength="10"></div>
+              <div><label class="lbl">OVB</label><select id="ef-ovb" class="inp"><option>PESADO</option><option>LEVE</option><option>NÃO POSSUI</option></select></div>
+              <div><label class="lbl">Situação</label><input type="text" id="ef-situacao" class="inp" placeholder="Ex: Ativo, Férias"></div>
+              <div class="col-span-2 md:col-span-5"><label class="lbl">Cursos Concluídos</label><input type="text" id="ef-cursos" class="inp"></div>
+            </div>
+          </div>
+          <div>
+            <h4 class="sec-ttl">4. Contato e Endereço</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div class="grid grid-cols-2 gap-3">
+                <div><label class="lbl">Tel Principal</label><input type="text" id="ef-telefone" class="inp"></div>
+                <div><label class="lbl">Contato Emergência</label><input type="text" id="ef-contato" class="inp"></div>
+                <div><label class="lbl">E-mail Pessoal</label><input type="text" id="ef-email-pes" class="inp"></div>
+                <div><label class="lbl">E-mail Funcional</label><input type="text" id="ef-email-fun" class="inp"></div>
+              </div>
+              <div><label class="lbl">Endereço Residencial</label><textarea id="ef-endereco" class="inp h-[88px]"></textarea></div>
+            </div>
+          </div>
+          <div>
+            <h4 class="sec-ttl">5. Carga e Fardamento</h4>
+            <div class="grid grid-cols-3 md:grid-cols-6 gap-3">
+              <div><label class="lbl">Lanterna (Tombo)</label><input type="text" id="ef-lanterna" class="inp"></div>
+              <div><label class="lbl">Calça</label><input type="text" id="ef-calca" class="inp"></div>
+              <div><label class="lbl">Gandola</label><input type="text" id="ef-gandola" class="inp"></div>
+              <div><label class="lbl">Camiseta</label><input type="text" id="ef-camiseta" class="inp"></div>
+              <div class="col-span-3 md:col-span-2"><label class="lbl">Data Incorp.</label><input type="text" id="ef-incorporacao" class="inp" placeholder="DD/MM/AAAA" oninput="mascaraData(this)" maxlength="10"></div>
+              <div class="col-span-3 md:col-span-6"><label class="lbl">Outros Materiais (EPI)</label><input type="text" id="ef-outros" class="inp"></div>
+              <div class="col-span-3 md:col-span-6"><label class="lbl">Observações Gerais</label><input type="text" id="ef-obs" class="inp"></div>
+            </div>
+          </div>
+        </div>
+        <div class="p-4 border-t bg-slate-50 rounded-b-xl flex justify-end gap-2">
+          <button type="button" onclick="fecharModal('modal-efetivo')" class="px-4 py-2 border rounded text-slate-600 font-bold text-sm">Cancelar</button>
+          <button type="button" onclick="salvarEfetivo()" class="px-6 py-2 bg-pmesp-blue text-white rounded font-bold text-sm shadow">Salvar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL FROTA -->
+    <div id="modal-frota" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 hidden">
+      <div class="bg-white w-full max-w-4xl rounded-xl shadow-2xl m-4 flex flex-col max-h-[95vh]">
+        <div class="bg-pmesp-blue text-white p-4 flex justify-between items-center rounded-t-xl"><h3 class="font-bold"><i class="fa-solid fa-truck-medical"></i> Ficha da Viatura</h3><button type="button" onclick="fecharModal('modal-frota')" class="text-white hover:text-red-400 text-xl">&times;</button></div>
+        <div class="p-4 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+          <input type="hidden" id="fr-id">
+          <div>
+            <h4 class="sec-ttl">1. Identificação Básica</h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div><label class="lbl">Prefixo</label><input type="text" id="fr-prefixo" class="inp font-bold text-pmesp-blue"></div>
+              <div><label class="lbl">Placa</label><input type="text" id="fr-placa" class="inp"></div>
+              <div><label class="lbl">Domínio</label><select id="fr-dominio" class="inp"><option>ESTADO</option><option>PREFEITURA</option></select></div>
+              <div><label class="lbl">Renavam</label><input type="text" id="fr-renavam" class="inp"></div>
+              <div><label class="lbl">Estação</label><select id="fr-estacao" class="inp"><option>Porto Feliz</option><option>Salto</option><option>Itu</option><option>São Roque</option><option>Ibiúna</option></select></div>
+              <div><label class="lbl">Status Operacional</label><select id="fr-status" class="inp font-bold"><option value="Operando">Operando</option><option value="Revezamento">Revezamento</option><option value="Baixada">Baixada</option><option value="Reserva">Reserva</option></select></div>
+            </div>
+          </div>
+          <div>
+            <h4 class="sec-ttl">2. Documentação & Estrutura</h4>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <div class="col-span-2"><label class="lbl">Marca / Modelo</label><input type="text" id="fr-modelo" class="inp"></div>
+              <div><label class="lbl">Ano</label><input type="text" id="fr-ano" class="inp"></div>
+              <div class="col-span-2"><label class="lbl">Patrimônio</label><input type="text" id="fr-patrimonio" class="inp"></div>
+              <div class="col-span-2 md:col-span-3"><label class="lbl">Chassi</label><input type="text" id="fr-chassi" class="inp uppercase"></div>
+              <div class="col-span-2"><label class="lbl">Motor</label><input type="text" id="fr-motor" class="inp"></div>
+            </div>
+          </div>
+          <div>
+            <h4 class="sec-ttl">3. Especificações Operacionais</h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div><label class="lbl">Combustível</label><input type="text" id="fr-combustivel" class="inp"></div>
+              <div><label class="lbl">Pneus</label><input type="text" id="fr-pneus" class="inp"></div>
+              <div class="col-span-2"><label class="lbl">Rádio</label><input type="text" id="fr-radio" class="inp"></div>
+              <div class="col-span-2"><label class="lbl">Bomba de Incêndio</label><input type="text" id="fr-bomba" class="inp"></div>
+              <div class="col-span-2"><label class="lbl">Nº Série (Bomba)</label><input type="text" id="fr-seriebomba" class="inp"></div>
+              <div><label class="lbl">Cap. LGE (Litros)</label><input type="number" id="fr-caplge" class="inp"></div>
+              <div><label class="lbl">Cap. Água (Litros)</label><input type="number" id="fr-capagua" class="inp"></div>
+            </div>
+          </div>
+        </div>
+        <div class="p-4 border-t bg-slate-50 rounded-b-xl flex justify-end gap-2">
+          <button type="button" onclick="fecharModal('modal-frota')" class="px-4 py-2 border rounded text-slate-600 font-bold text-sm">Cancelar</button>
+          <button type="button" onclick="salvarFrota()" class="px-6 py-2 bg-pmesp-blue text-white rounded font-bold text-sm shadow">Salvar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL MANUTENÇÃO DE FROTA -->
+    <div id="modal-manutencao" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 hidden">
+      <div class="bg-white w-full max-w-4xl rounded-xl shadow-2xl m-4 flex flex-col max-h-[92vh]">
+        <div class="bg-amber-600 text-white p-4 flex justify-between items-center rounded-t-xl">
+          <h3 class="font-bold"><i class="fa-solid fa-screwdriver-wrench mr-1"></i> Controle e Histórico de Manutenção de Frota</h3>
+          <button type="button" onclick="fecharModal('modal-manutencao')" class="text-white hover:text-amber-200 text-xl">&times;</button>
+        </div>
+        <div class="p-4 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+          <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
+            <div><label class="lbl">Viatura</label><select id="man-vtr-id" onchange="renderListaManutencoesModal()" class="inp font-bold text-pmesp-blue"></select></div>
+            <div><label class="lbl">Data</label><input type="date" id="man-data" class="inp font-bold"></div>
+            <div><label class="lbl">Tipo de Serviço</label><select id="man-tipo" class="inp font-bold"><option>Preventiva / Revisão</option><option>Corretiva / Mecânica</option><option>Óleo e Filtros</option><option>Pneus / Alinhamento</option><option>Elétrica / Sirene</option><option>Bomba de Incêndio</option></select></div>
+            <div><label class="lbl">KM Atual</label><input type="number" id="man-km" placeholder="84500" class="inp"></div>
+            <div><label class="lbl">KM Próx. Troca</label><input type="number" id="man-km-prox" placeholder="94500" class="inp"></div>
+            <div><label class="lbl">Oficina / O.S.</label><input type="text" id="man-oficina" placeholder="OS 142" class="inp uppercase"></div>
+            <div class="md:col-span-5"><label class="lbl">Descrição Detalhada</label><input type="text" id="man-desc" placeholder="Peças substituídas, defeito ou observações..." class="inp"></div>
+            <div><button type="button" onclick="salvarManutencaoVtr()" class="w-full bg-pmesp-blue hover:bg-pmesp-darkblue text-white font-bold py-2 px-3 rounded text-xs shadow"><i class="fa-solid fa-plus mr-1"></i> Lançar</button></div>
+          </div>
+          <div class="border rounded-lg overflow-hidden">
+            <table class="w-full text-left text-xs whitespace-nowrap border-collapse">
+              <thead class="bg-slate-100 text-slate-600 border-b">
+                <tr><th class="p-2.5">Data</th><th class="p-2.5">Prefixo</th><th class="p-2.5">Tipo</th><th class="p-2.5">KM Atual / Próx.</th><th class="p-2.5">Oficina / O.S.</th><th class="p-2.5">Descrição</th><th class="p-2.5 text-center">Ações</th></tr>
+              </thead>
+              <tbody id="tbody-manutencoes" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL PATRIMÔNIO -->
+    <div id="modal-patrimonio" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 hidden">
+      <div class="bg-white w-full max-w-2xl rounded-xl shadow-2xl m-4 flex flex-col">
+        <div class="bg-pmesp-blue text-white p-4 flex justify-between items-center rounded-t-xl"><h3 class="font-bold"><i class="fa-solid fa-boxes-stacked"></i> Ficha de Patrimônio</h3><button type="button" onclick="fecharModal('modal-patrimonio')" class="text-white text-xl">&times;</button></div>
+        <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input type="hidden" id="pat-id">
+          <div class="md:col-span-2"><label class="lbl">Equipamento / Item</label><input type="text" id="pat-item" class="inp"></div>
+          <div><label class="lbl">Nº de Série / Tombo</label><input type="text" id="pat-serie" class="inp font-bold"></div>
+          <div><label class="lbl">Domínio</label><select id="pat-dominio" class="inp font-bold"><option value="ESTADO">ESTADO (PMESP)</option><option value="PREFEITURA">PREFEITURA</option></select></div>
+          <div><label class="lbl">Estação</label><select id="pat-estacao" class="inp"><option>Porto Feliz</option><option>Salto</option><option>Itu</option><option>São Roque</option><option>Ibiúna</option></select></div>
+          <div><label class="lbl">Grupo</label><select id="pat-grupo" class="inp"><option>Informática</option><option>Mobiliário</option><option>Ferramentas</option><option>Eletrodomésticos</option><option>Veículos Diversos</option><option>Outros</option></select></div>
+          <div><label class="lbl">Ambiente / Localização / Setor</label><input type="text" id="pat-localizacao" placeholder="Ex: SALA DE RÁDIO, COZINHA" class="inp uppercase font-bold"></div>
+          <div><label class="lbl">Estado de Conservação</label><select id="pat-estado-conservacao" class="inp"><option>Operacional</option><option>Em Manutenção</option><option>Inservível</option></select></div>
+        </div>
+        <div class="p-4 border-t bg-slate-50 rounded-b-xl flex justify-end gap-2">
+          <button type="button" onclick="fecharModal('modal-patrimonio')" class="px-4 py-2 border rounded text-slate-600 font-bold text-sm">Cancelar</button>
+          <button type="button" onclick="salvarPatrimonio()" class="px-6 py-2 bg-pmesp-blue text-white rounded font-bold text-sm shadow">Salvar Item</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL ROTINA -->
+    <div id="modal-rotina" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 hidden">
+      <div class="bg-white w-full max-w-2xl rounded-xl shadow-2xl m-4 flex flex-col">
+        <div class="bg-pmesp-blue text-white p-4 flex justify-between items-center rounded-t-xl"><h3 class="font-bold"><i class="fa-solid fa-bell"></i> Configurar Aviso / Rotina</h3><button type="button" onclick="fecharModal('modal-rotina')" class="text-white text-xl">&times;</button></div>
+        <div class="p-4 space-y-4">
+          <input type="hidden" id="rot-id">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label class="lbl">Seção</label><select id="rot-secao" class="inp"><option value="Administrativo">Administrativo</option><option value="Operacional">Operacional (Plantão / Home)</option></select></div>
+            <div><label class="lbl">Tipo de Aviso</label><input type="text" id="rot-tipo" class="inp" placeholder="Ex: Vistoria, Recolha Lixo"></div>
+            <div><label class="lbl">Frequência</label><select id="rot-frequencia" onchange="atualizarCamposRotina()" class="inp font-bold text-pmesp-blue"><option value="Diário">Diário</option><option value="Semanal">Semanal</option><option value="Mensal">Mensal</option><option value="Período">Período</option></select></div>
+            <div id="box-rot-data" class="hidden"><label class="lbl" id="lbl-rot-data">Data / Dia</label><div id="container-rot-data"></div></div>
+          <div><label class="lbl">Observação / Instruções</label><textarea id="rot-obs" class="inp h-24"></textarea></div>
+        <div><label class="lbl">Link / URL de Referência (Opcional)</label><input type="url" id="rot-link" class="inp" placeholder="https://..."></div>
+          </div>
+          <div class="p-4 border-t bg-slate-50 rounded-b-xl flex justify-end gap-2">
+          <button type="button" onclick="fecharModal('modal-rotina')" class="px-4 py-2 border rounded text-slate-600 font-bold text-sm">Cancelar</button>
+          <button type="button" onclick="salvarRotina()" class="px-6 py-2 bg-pmesp-blue text-white rounded font-bold text-sm shadow">Salvar Aviso</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL IMPORTAÇÃO LOTE -->
+    <div id="modal-importacao" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 hidden">
+      <div class="bg-white w-full max-w-3xl rounded-xl shadow-2xl m-4 flex flex-col max-h-[90vh]">
+        <div class="bg-green-700 text-white p-4 flex justify-between items-center rounded-t-xl"><h3 class="font-bold"><i class="fa-solid fa-file-excel"></i> Importar em Lote (Excel/CSV)</h3><button type="button" onclick="fecharModal('modal-importacao')" class="text-white text-xl">&times;</button></div>
+        <div class="p-4 flex-1 flex flex-col">
+          <p class="text-xs text-slate-600 mb-2">Copie as células do Excel (incluindo a linha de cabeçalho) e cole abaixo:</p>
+          <textarea id="import-data" class="w-full h-64 border rounded p-2 text-xs font-mono" placeholder="Cole aqui os dados..."></textarea>
+        </div>
+        <div class="p-4 border-t bg-slate-50 rounded-b-xl flex justify-end gap-2">
+          <button type="button" onclick="fecharModal('modal-importacao')" class="px-4 py-2 border rounded text-slate-600 font-bold text-sm">Cancelar</button>
+          <button type="button" onclick="processarImportacao()" class="px-4 py-2 bg-green-600 text-white rounded font-bold text-sm">Processar e Salvar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAIS DE ALERTA E CONFIRMAÇÃO -->
+    <div id="modal-alerta" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 hidden">
+      <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full m-4 text-center border-t-4 border-amber-500">
+        <i class="fa-solid fa-circle-exclamation text-4xl text-amber-500 mb-4"></i><p id="texto-alerta" class="text-sm font-bold text-slate-700 mb-6"></p>
+        <button type="button" onclick="fecharModal('modal-alerta')" class="bg-pmesp-blue text-white px-6 py-2 rounded font-bold w-full">Ciente</button>
+      </div>
+    </div>
+    <div id="modal-confirmacao" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 hidden">
+      <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full m-4 text-center border-t-4 border-pmesp-blue">
+        <i class="fa-solid fa-circle-question text-4xl text-pmesp-blue mb-4"></i><p id="texto-confirmacao" class="text-sm font-bold text-slate-700 mb-6"></p>
+        <div class="flex gap-3">
+          <button type="button" onclick="fecharModal('modal-confirmacao')" class="flex-1 border text-slate-600 px-4 py-2 rounded font-bold">Cancelar</button>
+          <button type="button" id="btn-confirmar-acao" class="flex-1 bg-red-600 text-white px-4 py-2 rounded font-bold">Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+<script>
+    const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbxyREqwxOntX2_rXCDMK6xyU-wYxlfk986zJjL6G2u_H39mOJN8EkRWomaqte37zQ2ydw/exec";
+    const usuarios = {
+      'gestor': { senha: 'Xdl33122@', nivel: 'gestor' },
+      'admin': { senha: 'admin193', nivel: 'admin' }
+    };
+
+    let appState = { efetivo: [], frota: [], patrimonio: [], afastamentos: [], avisos: [] };
+    let confirmacaoCallback = null;
+    let tipoImp = '';
+    let sessaoMemoria = null;
+
+    const $ = id => document.getElementById(id);
+
+    const CAMPOS_EF = [
+      ['tipo','ef-tipo'],['estacao','ef-estacao'],['prontidao','ef-prontidao'],['funcao','ef-funcao'],
+      ['re','ef-re'],['graduacao','ef-graduacao'],['nomeGuerra','ef-guerra'],['nome','ef-nome'],
+      ['cpf','ef-cpf'],['lmp','ef-lmp'],['ias','ef-ias'],['taf','ef-taf'],['ovb','ef-ovb'],
+      ['situacao','ef-situacao'],['cursos','ef-cursos'],['telefone','ef-telefone'],['contato','ef-contato'],
+      ['emailPessoal','ef-email-pes'],['emailFuncional','ef-email-fun'],['endereco','ef-endereco'],
+      ['incorporacao','ef-incorporacao'],['lanterna','ef-lanterna'],['calca','ef-calca'],
+      ['gandola','ef-gandola'],['camiseta','ef-camiseta'],['outrosMateriais','ef-outros'],
+      ['obs','ef-obs'],['aniversario','ef-aniversario']
+    ];
+
+    const CAMPOS_FR = [
+      ['prefixo','fr-prefixo'],['placa','fr-placa'],['dominio','fr-dominio'],['renavam','fr-renavam'],
+      ['estacao','fr-estacao'],['status','fr-status'],['modelo','fr-modelo'],['ano','fr-ano'],
+      ['patrimonio','fr-patrimonio'],['chassi','fr-chassi'],['motor','fr-motor'],['combustivel','fr-combustivel'],
+      ['pneus','fr-pneus'],['radio','fr-radio'],['bomba','fr-bomba'],['serieBomba','fr-seriebomba'],
+      ['capLge','fr-caplge'],['capAgua','fr-capagua']
+    ];
+
+    function getApiUrl() {
+      try { return localStorage.getItem('api_url_2sgb') || DEFAULT_API_URL; } catch (e) { return DEFAULT_API_URL; }
+    }
+
+    function fecharModal(id) { if ($(id)) $(id).classList.add('hidden'); }
+    function mostrarAlerta(msg) { $('texto-alerta').textContent = msg; $('modal-alerta').classList.remove('hidden'); }
+    function mostrarConfirmacao(msg, cb) { $('texto-confirmacao').textContent = msg; confirmacaoCallback = cb; $('modal-confirmacao').classList.remove('hidden'); }
+    $('btn-confirmar-acao').addEventListener('click', () => { fecharModal('modal-confirmacao'); if (confirmacaoCallback) confirmacaoCallback(); });
+
+    window.mascaraData = function(i) {
+      let v = i.value.replace(/\D/g, '');
+      if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2);
+      if (v.length > 5) v = v.substring(0, 5) + '/' + v.substring(5, 9);
+      i.value = v;
+    };
+
+    // ==== LOGIN BLINDADO PARA GOOGLE SITES ====
+    function lerSessao() {
+      if (sessaoMemoria) return sessaoMemoria;
+      try { const l = localStorage.getItem('usuarioAtivo'); if (l) return l; } catch (e) {}
+      try { const s = sessionStorage.getItem('usuarioAtivo'); if (s) return s; } catch (e) {}
+      return null;
+    }
+
+    function gravarSessao(nivel) {
+      sessaoMemoria = nivel;
+      try { localStorage.setItem('usuarioAtivo', nivel); } catch (e) {}
+      try { sessionStorage.setItem('usuarioAtivo', nivel); } catch (e) {}
+    }
+
+    function limparSessao() {
+      sessaoMemoria = null;
+      try { localStorage.removeItem('usuarioAtivo'); } catch (e) {}
+      try { sessionStorage.removeItem('usuarioAtivo'); } catch (e) {}
+    }
+
+    function verificarSessao() {
+      const nivel = lerSessao();
+      if (nivel === 'gestor' || nivel === 'admin') {
+        $('tela-login').classList.add('hidden');
+        $('tela-sistema').classList.remove('hidden');
+        $('tela-sistema').classList.add('flex');
+        if ($('cfg-api-url')) $('cfg-api-url').value = getApiUrl();
+        carregarDadosDaNuvem();
+        mostrarAba('tab-efetivo');
+      } else {
+        $('tela-login').classList.remove('hidden');
+        $('tela-sistema').classList.add('hidden');
+        $('tela-sistema').classList.remove('flex');
+      }
+    }
+
+    function fazerLogin() {
+      const u = ($('login-usuario').value || '').trim().toLowerCase();
+      const p = $('login-senha').value || '';
+      if (usuarios[u] && usuarios[u].senha === p) {
+        gravarSessao(usuarios[u].nivel);
+        $('msg-erro').classList.add('hidden');
+        verificarSessao();
+      } else {
+        $('msg-erro').classList.remove('hidden');
+        $('login-senha').value = '';
+      }
+    }
+
+    function fazerLogout() {
+      limparSessao();
+      $('login-usuario').value = '';
+      $('login-senha').value = '';
+      verificarSessao();
+    }
+
+    window.addEventListener('DOMContentLoaded', verificarSessao);
+
+    // ==== SINCRONIZAÇÃO COM A NUVEM ====
+    async function carregarDadosDaNuvem() {
+      try {
+        const r = await fetch(getApiUrl() + '?t=' + Date.now());
+        const j = await r.json();
+        if (j.sucesso && j.dados) {
+          appState = j.dados;
+          ['efetivo','frota','patrimonio','afastamentos','avisos'].forEach(k => {
+            if (!Array.isArray(appState[k])) appState[k] = [];
+          });
+          exibirAvisosHojeAdmin();
+          renderTabelaEfetivo();
+          renderTabelaFrota();
+          renderTabelaPatrimonio();
+          renderTabelaRotina();
+          atualizarVisorJson();
+        }
+      } catch (e) {
+        mostrarAlerta("Erro ao carregar dados da planilha na nuvem.");
+      }
+    }
+
+    async function sincronizarComNuvem(silencioso = false) {
+      try {
+        try {
+          const rGet = await fetch(getApiUrl() + '?t=' + Date.now());
+          const jGet = await rGet.json();
+          if (jGet.sucesso && jGet.dados) {
+            ['afastamentos','ocorrencias','fechamentoMes','plantoes','ordemEfetivo','favoritos','agenda','calendarUrl'].forEach(ch => {
+              if (jGet.dados[ch] !== undefined) appState[ch] = jGet.dados[ch];
+            });
+          }
+        } catch (e) {}
+
+        const resp = await fetch(getApiUrl(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ dados: appState, usuario: "Painel Adm", estacao: "Geral" })
+        });
+        const res = await resp.json();
+        atualizarVisorJson();
+        if (res.sucesso && !silencioso) mostrarAlerta("Dados gravados na nuvem com sucesso!");
+      } catch (e) {
+        if (!silencioso) mostrarAlerta("Erro ao salvar na nuvem.");
+      }
+    }
+
+    function mostrarAba(idAba) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('border-pmesp-blue', 'text-pmesp-blue');
+        btn.classList.add('border-transparent', 'text-slate-500');
+      });
+      $(idAba).classList.remove('hidden');
+      const btn = $(idAba.replace('tab-', 'nav-'));
+      if (btn) {
+        btn.classList.remove('border-transparent', 'text-slate-500');
+        btn.classList.add('border-pmesp-blue', 'text-pmesp-blue');
+      }
+      if (idAba === 'tab-efetivo') renderTabelaEfetivo();
+      if (idAba === 'tab-frota') renderTabelaFrota();
+      if (idAba === 'tab-patrimonio') renderTabelaPatrimonio();
+      if (idAba === 'tab-rotina') renderTabelaRotina();
+      if (idAba === 'tab-gestor') atualizarVisorJson();
+    }
+
+    // ==== 1. EFETIVO ====
+    function renderTabelaEfetivo() {
+      const tbody = $('tbody-efetivo'), filtro = $('filtro-estacao-efetivo').value;
+      let lista = (appState.efetivo || []).filter(e => filtro === "Todas" || e.estacao === filtro);
+      if (!lista.length) {
+        tbody.innerHTML = '<tr><td colspan="20" class="text-center p-8 text-slate-400">Nenhum integrante cadastrado.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = lista.map(ef => {
+        let cp = "bg-slate-200 text-slate-700";
+        if (ef.prontidao === "Amarela") cp = "bg-amber-100 text-amber-700";
+        else if (ef.prontidao === "Verde") cp = "bg-green-100 text-green-700";
+        else if (ef.prontidao === "Azul") cp = "bg-blue-100 text-blue-700";
+        else if (ef.prontidao === "Expediente") cp = "bg-slate-800 text-white";
+        else if ((ef.prontidao || '').includes("Equipe")) cp = "bg-purple-100 text-purple-700";
+        const corTipo = (ef.tipo === 'BCP' || ef.tipo === 'BCM') ? 'bg-indigo-100 text-indigo-700' : 'bg-pmesp-blue text-white';
+        return `<tr class="hover:bg-slate-50 border-b">
+          <td class="p-2 text-center"><button type="button" onclick="editarEfetivo('${ef.id}')" class="text-pmesp-blue mr-2"><i class="fa-solid fa-pen-to-square"></i></button><button type="button" onclick="excluirEfetivo('${ef.id}')" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td>
+          <td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${corTipo}">${ef.tipo}</span></td>
+          <td class="p-2 font-bold">${ef.estacao||'-'}</td><td class="p-2"><span class="px-2 py-1 rounded text-[10px] font-bold ${cp}">${ef.prontidao||'-'}</span></td>
+          <td class="p-2 font-bold text-pmesp-blue">${ef.re||'-'}</td><td class="p-2">${ef.graduacao||'-'}</td><td class="p-2 font-black">${ef.nomeGuerra||'-'}</td><td class="p-2 text-[10px]">${ef.nome||'-'}</td>
+          <td class="p-2">${ef.funcao||'-'}</td><td class="p-2">${ef.cpf||'-'}</td><td class="p-2">${ef.lmp||'-'}</td><td class="p-2">${ef.ias||'-'}</td><td class="p-2">${ef.taf||'-'}</td><td class="p-2">${ef.ovb||'-'}</td>
+          <td class="p-2">${ef.aniversario||'-'}</td><td class="p-2">${ef.telefone||'-'}</td><td class="p-2">${ef.contato||'-'}</td><td class="p-2 text-blue-500">${ef.emailPessoal||'-'}</td>
+          <td class="p-2 text-[10px]">${ef.calca||'-'}/${ef.gandola||'-'}/${ef.camiseta||'-'}</td><td class="p-2">${ef.situacao||'-'}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function abrirModalEfetivo() {
+      $('ef-id').value = '';
+      document.querySelectorAll('#modal-efetivo input, #modal-efetivo textarea').forEach(i => i.value = '');
+      $('modal-efetivo').classList.remove('hidden');
+    }
+
+    function salvarEfetivo() {
+      const id = $('ef-id').value || "EF-" + Date.now();
+      const obj = { id };
+      CAMPOS_EF.forEach(([prop, elId]) => obj[prop] = ($(elId)?.value || '').trim());
+      const idx = appState.efetivo.findIndex(e => e.id === id);
+      if (idx > -1) appState.efetivo[idx] = obj; else appState.efetivo.push(obj);
+      renderTabelaEfetivo(); fecharModal('modal-efetivo'); sincronizarComNuvem(true);
+    }
+
+    function editarEfetivo(id) {
+      const ef = appState.efetivo.find(e => e.id === id); if (!ef) return;
+      $('ef-id').value = ef.id;
+      CAMPOS_EF.forEach(([prop, elId]) => { if ($(elId)) $(elId).value = ef[prop] || ''; });
+      $('modal-efetivo').classList.remove('hidden');
+    }
+
+    function excluirEfetivo(id) {
+      mostrarConfirmacao("Remover integrante?", () => {
+        appState.efetivo = appState.efetivo.filter(e => e.id !== id);
+        renderTabelaEfetivo(); sincronizarComNuvem(true);
+      });
+    }
+
+    // ==== 2. FROTA E MANUTENÇÃO ====
+    function renderTabelaFrota() {
+      const tbody = $('tbody-frota'), f = $('filtro-estacao-frota').value;
+      let lista = (appState.frota || []).filter(v => f === "Todas" || v.estacao === f);
+      if (!lista.length) {
+        tbody.innerHTML = '<tr><td colspan="19" class="text-center p-8 text-slate-400">Nenhuma viatura cadastrada.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = lista.map(v => {
+        let sc = "bg-green-100 text-green-700";
+        if (v.status === "Baixada") sc = "bg-red-100 text-red-700";
+        else if (v.status === "Reserva") sc = "bg-amber-100 text-amber-700";
+        const qtdMan = Array.isArray(v.manutencoes) ? v.manutencoes.length : 0;
+        return `<tr class="hover:bg-slate-50 border-b">
+          <td class="p-2 text-center space-x-1.5">
+            <button type="button" onclick="abrirModalManutencao('${v.id}')" class="text-amber-600 hover:text-amber-800" title="Manutenções (${qtdMan})"><i class="fa-solid fa-screwdriver-wrench"></i></button>
+            <button type="button" onclick="editarFrota('${v.id}')" class="text-pmesp-blue"><i class="fa-solid fa-pen-to-square"></i></button>
+            <button type="button" onclick="excluirFrota('${v.id}')" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
+          </td>
+          <td class="p-2 font-bold">${v.estacao||'-'}</td><td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${sc}">${v.status||'Operando'}</span></td>
+          <td class="p-2 font-bold text-pmesp-blue">${v.prefixo||'-'}</td><td class="p-2">${v.modelo||'-'}</td><td class="p-2 text-[10px]">${v.dominio||'-'}</td><td class="p-2 font-mono">${v.placa||'-'}</td>
+          <td class="p-2 font-mono">${v.renavam||'-'}</td><td class="p-2">${v.chassi||'-'}</td><td class="p-2">${v.motor||'-'}</td><td class="p-2">${v.ano||'-'}</td><td class="p-2">${v.patrimonio||'-'}</td>
+          <td class="p-2">${v.combustivel||'-'}</td><td class="p-2">${v.pneus||'-'}</td><td class="p-2">${v.radio||'-'}</td><td class="p-2">${v.bomba||'-'}</td><td class="p-2">${v.serieBomba||'-'}</td>
+          <td class="p-2">${v.capLge||'0'}</td><td class="p-2">${v.capAgua||'0'}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function abrirModalFrota() {
+      $('fr-id').value = '';
+      document.querySelectorAll('#modal-frota input').forEach(i => i.value = '');
+      $('modal-frota').classList.remove('hidden');
+    }
+
+    function salvarFrota() {
+      const id = $('fr-id').value || "FR-" + Date.now();
+      const idx = appState.frota.findIndex(f => f.id === id);
+      const obj = { id, manutencoes: (idx > -1 && Array.isArray(appState.frota[idx].manutencoes)) ? appState.frota[idx].manutencoes : [] };
+      CAMPOS_FR.forEach(([prop, elId]) => obj[prop] = ($(elId)?.value || '').trim());
+      obj.prefixo = obj.prefixo.toUpperCase(); obj.placa = obj.placa.toUpperCase(); obj.chassi = obj.chassi.toUpperCase();
+      if (idx > -1) appState.frota[idx] = obj; else appState.frota.push(obj);
+      renderTabelaFrota(); fecharModal('modal-frota'); sincronizarComNuvem(true);
+    }
+
+    function editarFrota(id) {
+      const fr = appState.frota.find(f => f.id === id); if (!fr) return;
+      $('fr-id').value = fr.id;
+      CAMPOS_FR.forEach(([prop, elId]) => { if ($(elId)) $(elId).value = fr[prop] || ''; });
+      $('modal-frota').classList.remove('hidden');
+    }
+
+    function excluirFrota(id) {
+      mostrarConfirmacao("Remover Viatura?", () => {
+        appState.frota = appState.frota.filter(f => f.id !== id);
+        renderTabelaFrota(); sincronizarComNuvem(true);
+      });
+    }
+
+    function abrirModalManutencao(vtrId) {
+      const sel = $('man-vtr-id');
+      sel.innerHTML = '<option value="TODAS">-- Todas as Viaturas --</option>' + (appState.frota || []).map(v => `<option value="${v.id}">${v.prefixo} (${v.estacao})</option>`).join('');
+      sel.value = vtrId || 'TODAS';
+      $('man-data').value = new Date().toISOString().split('T')[0];
+      ['man-km','man-km-prox','man-oficina','man-desc'].forEach(id => $(id).value = '');
+      renderListaManutencoesModal();
+      $('modal-manutencao').classList.remove('hidden');
+    }
+
+    function renderListaManutencoesModal() {
+      const vtrId = $('man-vtr-id').value, tbody = $('tbody-manutencoes');
+      let reg = [];
+      (appState.frota || []).forEach(v => {
+        if (vtrId !== 'TODAS' && v.id !== vtrId) return;
+        (v.manutencoes || []).forEach((m, idx) => reg.push({ ...m, vtrId: v.id, prefixo: v.prefixo, idxMan: idx }));
+      });
+      reg.sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+      if (!reg.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center p-6 text-slate-400">Nenhuma manutenção registrada.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = reg.map(r => `<tr class="hover:bg-slate-50 border-b">
+        <td class="p-2.5 font-bold">${(r.data||'').split('-').reverse().join('/')}</td><td class="p-2.5 font-black text-pmesp-blue">${r.prefixo}</td>
+        <td class="p-2.5"><span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-[10px] font-bold">${r.tipo}</span></td>
+        <td class="p-2.5">${r.km||'-'} / <strong class="text-red-600">${r.kmProx||'-'}</strong></td><td class="p-2.5">${r.oficina||'-'}</td>
+        <td class="p-2.5 whitespace-normal max-w-sm">${r.desc||'-'}</td>
+        <td class="p-2.5 text-center"><button type="button" onclick="excluirManutencaoVtr('${r.vtrId}',${r.idxMan})" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td>
+      </tr>`).join('');
+    }
+
+    function salvarManutencaoVtr() {
+      const vtrId = $('man-vtr-id').value, desc = $('man-desc').value.trim();
+      if (!vtrId || vtrId === 'TODAS') { mostrarAlerta("Selecione uma viatura específica."); return; }
+      if (!desc) { mostrarAlerta("Descreva o serviço realizado."); return; }
+      const vtr = appState.frota.find(v => v.id === vtrId); if (!vtr) return;
+      if (!Array.isArray(vtr.manutencoes)) vtr.manutencoes = [];
+      vtr.manutencoes.push({
+        data: $('man-data').value, tipo: $('man-tipo').value, km: $('man-km').value,
+        kmProx: $('man-km-prox').value, oficina: $('man-oficina').value.trim().toUpperCase(), desc
+      });
+      ['man-km','man-km-prox','man-oficina','man-desc'].forEach(id => $(id).value = '');
+      renderListaManutencoesModal(); renderTabelaFrota(); sincronizarComNuvem(true);
+    }
+
+    function excluirManutencaoVtr(vtrId, idxMan) {
+      const vtr = appState.frota.find(v => v.id === vtrId); if (!vtr || !vtr.manutencoes) return;
+      vtr.manutencoes.splice(idxMan, 1); renderListaManutencoesModal(); renderTabelaFrota(); sincronizarComNuvem(true);
+    }
+
+    // ==== 3. PATRIMÔNIO E IMPRESSÃO A4 POR AMBIENTE ====
+    function atualizarFiltroLocaisPatrimonio() {
+      const selEst = $('filtro-estacao-patrimonio').value, selLoc = $('filtro-local-patrimonio');
+      const valAnt = selLoc.value;
+      let lista = (appState.patrimonio || []).filter(p => selEst === "Todas" || p.estacao === selEst);
+      const locais = [...new Set(lista.map(p => (p.localizacao || '').trim().toUpperCase()).filter(Boolean))].sort();
+      selLoc.innerHTML = '<option value="Todos">Todos os Ambientes / Setores</option>' + locais.map(l => `<option value="${l}">${l}</option>`).join('');
+      if (locais.includes(valAnt)) selLoc.value = valAnt;
+    }
+
+    function renderTabelaPatrimonio() {
+      atualizarFiltroLocaisPatrimonio();
+      const tbody = $('tbody-patrimonio'), fEst = $('filtro-estacao-patrimonio').value, fLoc = $('filtro-local-patrimonio').value;
+      let lista = (appState.patrimonio || []).filter(p => (fEst === "Todas" || p.estacao === fEst) && (fLoc === "Todos" || (p.localizacao || '').trim().toUpperCase() === fLoc));
+      if (!lista.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center p-8 text-slate-400">Nenhum item encontrado.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = lista.map(p => `<tr class="hover:bg-slate-50 border-b">
+        <td class="p-2 text-center space-x-2"><button type="button" onclick="editarPatrimonio('${p.id}')" class="text-pmesp-blue"><i class="fa-solid fa-pen-to-square"></i></button><button type="button" onclick="excluirPatrimonio('${p.id}')" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td>
+        <td class="p-2">${p.dominio||'-'}</td><td class="p-2 font-mono font-bold text-pmesp-blue">${p.serie||'-'}</td><td class="p-2 font-bold">${p.item||'-'}</td>
+        <td class="p-2">${p.grupo||'-'}</td><td class="p-2">${p.estacao||'-'}</td><td class="p-2 font-bold text-amber-800">${p.localizacao||'-'}</td><td class="p-2">${p.estadoConservacao||'-'}</td>
+      </tr>`).join('');
+    }
+
+    function abrirModalPatrimonio() {
+      $('pat-id').value = '';
+      document.querySelectorAll('#modal-patrimonio input').forEach(i => i.value = '');
+      $('modal-patrimonio').classList.remove('hidden');
+    }
+
+    function salvarPatrimonio() {
+      const id = $('pat-id').value || "PAT-" + Date.now();
+      const obj = {
+        id, item: $('pat-item').value.trim(), serie: $('pat-serie').value.trim(),
+        dominio: $('pat-dominio').value, estacao: $('pat-estacao').value,
+        grupo: $('pat-grupo').value, localizacao: $('pat-localizacao').value.trim().toUpperCase(),
+        estadoConservacao: $('pat-estado-conservacao').value
+      };
+      const idx = appState.patrimonio.findIndex(p => p.id === id);
+      if (idx > -1) appState.patrimonio[idx] = obj; else appState.patrimonio.push(obj);
+      renderTabelaPatrimonio(); fecharModal('modal-patrimonio'); sincronizarComNuvem(true);
+    }
+
+    function editarPatrimonio(id) {
+      const p = appState.patrimonio.find(x => x.id === id); if (!p) return;
+      $('pat-id').value = p.id; $('pat-item').value = p.item || ''; $('pat-serie').value = p.serie || '';
+      $('pat-dominio').value = p.dominio || 'ESTADO'; $('pat-estacao').value = p.estacao || 'Porto Feliz';
+      $('pat-grupo').value = p.grupo || 'Outros'; $('pat-localizacao').value = p.localizacao || '';
+      $('pat-estado-conservacao').value = p.estadoConservacao || 'Operacional';
+      $('modal-patrimonio').classList.remove('hidden');
+    }
+
+    function excluirPatrimonio(id) {
+      mostrarConfirmacao("Remover item?", () => {
+        appState.patrimonio = appState.patrimonio.filter(p => p.id !== id);
+        renderTabelaPatrimonio(); sincronizarComNuvem(true);
+      });
+    }
+
+    function imprimirRelatorioPatrimonioAmbiente() {
+      const fEst = $('filtro-estacao-patrimonio').value, fLoc = $('filtro-local-patrimonio').value;
+      let lista = (appState.patrimonio || []).filter(p => (fEst === "Todas" || p.estacao === fEst) && (fLoc === "Todos" || (p.localizacao || '').trim().toUpperCase() === fLoc));
+      if (!lista.length) { mostrarAlerta("Sem itens neste filtro para imprimir."); return; }
+      const hoje = new Date().toLocaleDateString('pt-BR');
+      const linhas = lista.map((p, i) => `<tr><td>${i+1}</td><td><b>${p.serie||'S/N'}</b></td><td style="text-align:left">${p.item||'-'}</td><td>${p.dominio||'-'}</td><td>${p.grupo||'-'}</td><td><b>${p.localizacao||'-'}</b></td><td>${p.estadoConservacao||'-'}</td></tr>`).join('');
+      const w = window.open('', '', 'width=950,height=720');
+      w.document.write(`<style>body{font-family:Arial,sans-serif;margin:1.2cm}table{width:100%;border-collapse:collapse;font-size:10px;text-align:center;margin-top:10px}th,td{border:1px solid #000;padding:5px}th{background:#e2e8f0}</style><div style="text-align:center;font-weight:bold;font-size:13px;margin-bottom:14px">POLÍCIA MILITAR DO ESTADO DE SÃO PAULO<br>CORPO DE BOMBEIROS — 15º GB / 2º SGB — EB ${fEst==='Todas'?'GERAL':fEst.toUpperCase()}<br><u>RELAÇÃO DE MATERIAL CARGA POR AMBIENTE</u></div><div style="border:1.5px solid #000;padding:6px;font-size:11px;font-weight:bold;display:flex;justify-content:space-between"><span>AMBIENTE: ${fLoc}</span><span>ITENS: ${lista.length} | DATA: ${hoje}</span></div><table><thead><tr><th>#</th><th>TOMBO</th><th>ITEM</th><th>DOMÍNIO</th><th>GRUPO</th><th>AMBIENTE</th><th>ESTADO</th></tr></thead><tbody>${linhas}</tbody></table><div style="margin-top:55px;display:flex;justify-content:space-around;text-align:center;font-size:10px"><div><hr style="width:200px;border:0;border-top:1px solid #000"><b>LUCAS HENRIQUE GALVÃO LEITE</b><br>CB PM AUX ADM</div><div><hr style="width:200px;border:0;border-top:1px solid #000"><b>JEAN WILLIAN DE MORAES FONSECA</b><br>1º TEN PM CMT EB</div></div>`);
+      w.document.close(); setTimeout(() => w.print(), 400);
+    }
+
+    // ==== 4. ROTINA E AVISOS ====
+    function renderTabelaRotina() {
+      const tbody = $('tbody-rotina'), lista = appState.avisos || [];
+      if (!lista.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center p-8 text-slate-400">Nenhum aviso configurado.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = lista.map(av => {
+        let tp = av.frequencia === 'Diário' ? 'Diário' : (av.frequencia === 'Período' ? `${av.dataInicio} a ${av.dataFim}` : av.valorData);
+        const btnLnk = av.link ? ` <a href="${av.link}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 bg-blue-100 text-pmesp-blue px-2 py-0.5 rounded text-[10px] font-bold hover:bg-blue-200 ml-1"><i class="fa-solid fa-link"></i> Link</a>` : '';
+        return `<tr class="hover:bg-slate-50 border-b"><td class="p-3 text-center"><button type="button" onclick="editarRotina('${av.id}')" class="text-pmesp-blue mr-3"><i class="fa-solid fa-pen-to-square"></i></button><button type="button" onclick="excluirRotina('${av.id}')" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td><td class="p-3 font-bold">${av.secao}</td><td class="p-3 font-bold">${av.tipo}</td><td class="p-3">${av.frequencia}</td><td class="p-3 font-mono">${tp}</td><td class="p-3 max-w-[280px] truncate">${av.obs}${btnLnk}</td></tr>`;
+      }).join('');
+    }
+
+    function atualizarCamposRotina() {
+      const f = $('rot-frequencia').value, box = $('box-rot-data'), c = $('container-rot-data');
+      box.classList.toggle('hidden', f === 'Diário');
+      if (f === 'Diário') c.innerHTML = '<input type="hidden" id="rot-valor" value="*">';
+      else if (f === 'Semanal') c.innerHTML = '<select id="rot-valor" class="inp"><option value="1">Seg</option><option value="2">Ter</option><option value="3">Qua</option><option value="4">Qui</option><option value="5">Sex</option><option value="6">Sáb</option><option value="0">Dom</option></select>';
+      else if (f === 'Mensal') c.innerHTML = '<input type="number" id="rot-valor" min="1" max="31" class="inp">';
+      else c.innerHTML = '<div class="flex gap-2"><input type="date" id="rot-inicio" class="inp"><input type="date" id="rot-fim" class="inp"></div>';
+    }
+
+    function abrirModalRotina() {
+      $('rot-id').value = ''; $('rot-tipo').value = ''; $('rot-obs').value = '';$('rot-link').value = '';
+      $('rot-frequencia').value = 'Diário'; atualizarCamposRotina();
+      $('modal-rotina').classList.remove('hidden');
+    }
+
+    function salvarRotina() {
+      const f = $('rot-frequencia').value;
+      let linkVal = ($('rot-link')?.value || '').trim();
+      if (linkVal && !/^https?:\/\//i.test(linkVal)) linkVal = 'https://' + linkVal;
+      const obj = {
+        id: $('rot-id').value || "AV-" + Date.now(), secao: $('rot-secao').value,
+        tipo: $('rot-tipo').value, frequencia: f, obs: $('rot-obs').value, link: linkVal,
+        valorData: (f !== 'Diário' && f !== 'Período') ? $('rot-valor').value : '',
+        dataInicio: f === 'Período' ? $('rot-inicio').value : '',
+        dataFim: f === 'Período' ? $('rot-fim').value : ''
+      };
+      const idx = appState.avisos.findIndex(a => a.id === obj.id);
+      if (idx > -1) appState.avisos[idx] = obj; else appState.avisos.push(obj);
+      renderTabelaRotina(); fecharModal('modal-rotina'); sincronizarComNuvem(true); exibirAvisosHojeAdmin();
+    }
+
+    function editarRotina(id) {
+      const av = appState.avisos.find(a => a.id === id); if (!av) return;
+      $('rot-id').value = av.id; $('rot-secao').value = av.secao; $('rot-tipo').value = av.tipo;
+      $('rot-frequencia').value = av.frequencia; $('rot-obs').value = av.obs;
+      if ($('rot-link')) $('rot-link').value = av.link || '';
+      atualizarCamposRotina();
+      if (av.frequencia === 'Período') { $('rot-inicio').value = av.dataInicio; $('rot-fim').value = av.dataFim; }
+      else if (av.frequencia !== 'Diário') $('rot-valor').value = av.valorData;
+      $('modal-rotina').classList.remove('hidden');
+    }
+
+    function excluirRotina(id) {
+      mostrarConfirmacao("Remover aviso?", () => {
+        appState.avisos = appState.avisos.filter(a => a.id !== id);
+        renderTabelaRotina(); sincronizarComNuvem(true); exibirAvisosHojeAdmin();
+      });
+    }
+
+    function exibirAvisosHojeAdmin() {
+      const c = $('container-avisos-hoje'); if (!c) return;
+      const h = new Date(), dIso = h.toISOString().split('T')[0];
+      c.innerHTML = (appState.avisos || []).filter(a => a.secao === 'Administrativo' && (a.frequencia === 'Diário' || (a.frequencia === 'Semanal' && parseInt(a.valorData,10) === h.getDay()) || (a.frequencia === 'Mensal' && parseInt(a.valorData,10) === h.getDate()) || (a.frequencia === 'Período' && dIso >= a.dataInicio && dIso <= a.dataFim))).map(a => {
+        const lnk = a.link ? ` <a href="${a.link}" target="_blank" rel="noopener noreferrer" class="underline font-bold text-pmesp-blue ml-2">[Abrir Link]</a>` : '';
+        return `<div class="bg-blue-50 border-l-4 border-pmesp-blue p-3 rounded shadow-sm flex justify-between items-center text-xs"><div><b class="text-pmesp-blue uppercase">${a.tipo}:</b> ${a.obs}${lnk}</div><button type="button" onclick="this.parentElement.remove()">&times;</button></div>`;
+      }).join('');
+    }
+    
+    // ==== 5. IMPORTAÇÃO E GESTOR / BACKUP ====
+    function abrirModalImportacao(tipo) { tipoImp = tipo; $('import-data').value = ''; $('modal-importacao').classList.remove('hidden'); }
+
+    function processarImportacao() {
+      const txt = $('import-data').value.trim(); if (!txt) return;
+      const lins = txt.split('\n'), estSel = $('filtro-estacao-efetivo').value, base = estSel === "Todas" ? "Porto Feliz" : estSel;
+      const hdrs = lins[0].split(/\t|;|,/).map(c => c.toLowerCase());
+      const getI = kws => { for (let k of kws) { let i = hdrs.findIndex(h => h.includes(k)); if (i !== -1) return i; } return -1; };
+      const v = (c, i) => (i !== -1 && c[i]) ? c[i].trim() : "";
+      let n = 0;
+      for (let j = 1; j < lins.length; j++) {
+        let cols = lins[j].split(/\t|;|,/); if (cols.length < 2) continue;
+        if (tipoImp === 'efetivo') {
+          const g = v(cols, getI(['grad','posto']));
+          appState.efetivo.push({ id: "EF-I-"+Date.now()+j, tipo: g.toLowerCase().includes('bcp')?'BCP':'Militar', estacao: base, prontidao: "Amarela", re: v(cols, getI(['re','mat'])), graduacao: g, nomeGuerra: v(cols, getI(['guerra'])), nome: v(cols, getI(['nome'])), cpf: v(cols, getI(['cpf'])), situacao: 'Ativo' }); n++;
+        } else if (tipoImp === 'frota') {
+          appState.frota.push({ id: "FR-I-"+Date.now()+j, prefixo: v(cols, getI(['pref'])).toUpperCase(), modelo: v(cols, getI(['mod'])), placa: v(cols, getI(['pla'])).toUpperCase(), estacao: base, status: "Operando", dominio: "ESTADO", manutencoes: [] }); n++;
+        } else if (tipoImp === 'patrimonio') {
+          appState.patrimonio.push({ id: "PAT-I-"+Date.now()+j, serie: v(cols, getI(['ser','tomb','pat'])), item: v(cols, getI(['item','equip','desc'])), dominio: "ESTADO", estacao: base, grupo: "Outros", localizacao: v(cols, getI(['loc','amb','set'])).toUpperCase()||"GERAL", estadoConservacao: "Operacional" }); n++;
+        }
+      }
+      if (n > 0) { renderTabelaEfetivo(); renderTabelaFrota(); renderTabelaPatrimonio(); sincronizarComNuvem(true); fecharModal('modal-importacao'); mostrarAlerta(n + " registros importados!"); }
+    }
+
+    function atualizarVisorJson() {
+      const str = JSON.stringify(appState, null, 2);
+      if ($('json-preview')) $('json-preview').textContent = str;
+      if ($('diag-resumo')) $('diag-resumo').textContent = `Efetivo: ${(appState.efetivo||[]).length} | Frota: ${(appState.frota||[]).length} | Patrimônio: ${(appState.patrimonio||[]).length} (${(str.length/1024).toFixed(1)} KB)`;
+    }
+
+    function salvarNovaUrlApi() {
+      const u = $('cfg-api-url').value.trim();
+      if (u) {
+        try { localStorage.setItem('api_url_2sgb', u); } catch (e) {}
+        mostrarAlerta("Nova URL da API salva!");
+        carregarDadosDaNuvem();
+      }
+    }
+
+    function baixarBackupJSON() {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(appState, null, 2)], { type: 'application/json' }));
+      a.download = `backup_2sgb_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+    }
+  </script>
+</body>
+</html>
