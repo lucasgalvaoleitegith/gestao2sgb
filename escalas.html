@@ -86,6 +86,9 @@
             Entrar no Sistema
           </button>
         </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ================= SISTEMA PRINCIPAL ================= -->
   <div id="tela-sistema" class="hidden flex-col min-h-screen">
@@ -521,27 +524,47 @@
       try { return localStorage.getItem('usuarioAtivo'); } catch (e) { return null; }
     }
 
+    function gravarSessaoSegura(nivel) {
+      sessaoMemoria = nivel;
+      try { localStorage.setItem('usuarioAtivo', nivel); } catch (e) {}
+    }
+
+    function limparSessaoSegura() {
+      sessaoMemoria = null;
+      try { localStorage.removeItem('usuarioAtivo'); } catch (e) {}
+    }
+
     function verificarSessao() {
       const nivel = lerSessaoSegura();
+      const telaLogin = document.getElementById('tela-login');
+      const telaSistema = document.getElementById('tela-sistema');
+
       if (nivel === 'gestor' || nivel === 'admin') {
-        sessaoMemoria = nivel;
-        document.getElementById('tela-login').classList.add('hidden');
-        document.getElementById('tela-sistema').classList.remove('hidden');
-        document.getElementById('tela-sistema').classList.add('flex');
+        gravarSessaoSegura(nivel);
+        if (telaLogin) telaLogin.classList.add('hidden');
+        if (telaSistema) {
+          telaSistema.classList.remove('hidden');
+          telaSistema.classList.add('flex');
+        }
 
         const hoje = new Date();
         const mesAtualStr = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
-        document.getElementById('filtro-mes').value = mesAtualStr;
+        const filtroMes = document.getElementById('filtro-mes');
+        if (filtroMes && !filtroMes.value) filtroMes.value = mesAtualStr;
 
         const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
-        document.getElementById('pesq-data-ini').value = `${mesAtualStr}-01`;
-        document.getElementById('pesq-data-fim').value = `${mesAtualStr}-${String(ultimoDia).padStart(2, '0')}`;
+        const dtIni = document.getElementById('pesq-data-ini');
+        const dtFim = document.getElementById('pesq-data-fim');
+        if (dtIni && !dtIni.value) dtIni.value = `${mesAtualStr}-01`;
+        if (dtFim && !dtFim.value) dtFim.value = `${mesAtualStr}-${String(ultimoDia).padStart(2, '0')}`;
 
         carregarDadosNuvem(false);
       } else {
-        document.getElementById('tela-login').classList.remove('hidden');
-        document.getElementById('tela-sistema').classList.add('hidden');
-        document.getElementById('tela-sistema').classList.remove('flex');
+        if (telaLogin) telaLogin.classList.remove('hidden');
+        if (telaSistema) {
+          telaSistema.classList.add('hidden');
+          telaSistema.classList.remove('flex');
+        }
       }
     }
 
@@ -551,19 +574,17 @@
       const msgErro = document.getElementById('msg-erro');
 
       if (usuarios[user] && usuarios[user].senha === pass) {
-        sessaoMemoria = usuarios[user].nivel;
-        try { localStorage.setItem('usuarioAtivo', usuarios[user].nivel); } catch (e) {}
-        msgErro.classList.add('hidden');
+        gravarSessaoSegura(usuarios[user].nivel);
+        if (msgErro) msgErro.classList.add('hidden');
         verificarSessao();
       } else {
-        msgErro.classList.remove('hidden');
+        if (msgErro) msgErro.classList.remove('hidden');
         document.getElementById('login-senha').value = '';
       }
     }
 
     function fazerLogout() {
-      sessaoMemoria = null;
-      try { localStorage.removeItem('usuarioAtivo'); } catch (e) {}
+      limparSessaoSegura();
       document.getElementById('login-usuario').value = '';
       document.getElementById('login-senha').value = '';
       verificarSessao();
@@ -1006,7 +1027,6 @@
         sincronizarComNuvem(true);
       }
     }
-    
     function obterProntidaoEfetivaNoDia(ef, dataStr) {
       if (Array.isArray(appState.mudancasProntidao)) {
         const reg = appState.mudancasProntidao.find(m =>
